@@ -1,29 +1,42 @@
 import itertools
 import random
+import csv
+import sys
 
 
 players = ("Eyes", "Hands", "Ears", "Mouth")
 item_types = ("Cannonball", "Parchment", "Jewel", "Bottle")
 
-min_item_count = 1
-max_item_count = 6
+# for each card, give the card count, item_types_count, item_count
+card_specs = [
+	# 7 cards of 2 item types
+	(2, 2, 2),
+	(3, 2, 4),
+	(2, 2, 6),
+	# 7 cards of 3 item types
+	(2, 3, 3),
+	(3, 3, 4),
+	(2, 3, 6),
+	# 6 cards of 4 item types
+	(2, 4, 4),
+	(2, 4, 5),
+	(2, 4, 6),
+	]
 
-def generate_item_counts(player_item_types):
-	player_item_counts = {}
-	for player_item_type_index in range(len(player_item_types)):
-		player_item_type = player_item_types[player_item_type_index]
-		# pick a random number, leaving some for the rest
-		remaining_item_types = len(player_item_types) - player_item_type_index + 1
-		item_count = random.randint(1, max_item_count - remaining_item_types)
-		player_item_counts[player_item_type] = item_count
+def generate_item_counts(player_item_types, item_count):
+	# Start with by giving 1 item to each item type
+	player_item_counts = dict(zip(player_item_types, itertools.repeat(1)))
+	remaining_item_count = item_count - len(player_item_types)
+
+	# Give 1 item at a time one of the item types, until none are left
+	while remaining_item_count > 0:
+		player_item_counts[random.choice(player_item_types)] += 1
+		remaining_item_count = remaining_item_count - 1
+		
 	return player_item_counts
 
-def generate_card(item_types_count=None):
-	if item_types_count == None:
-		# pick a random number of item types
-		item_types_count = random.randint(2, 4)
-
-	# pick that number of items
+def generate_card(item_types_count, item_count):
+	# pick a number of items
 	picked_item_types = random.sample(item_types, item_types_count)
 	# separate into two lists
 	split_point = random.randint(1, item_types_count - 1)
@@ -34,8 +47,8 @@ def generate_card(item_types_count=None):
 	# print("split item types %s and %s" % (str(player_a_item_types), str(player_b_item_types)))
 
 	# pick a random number of items for each side
-	player_a_item_counts = generate_item_counts(player_a_item_types)
-	player_b_item_counts = generate_item_counts(player_b_item_types)
+	player_a_item_counts = generate_item_counts(player_a_item_types, item_count)
+	player_b_item_counts = generate_item_counts(player_b_item_types, item_count)
 
 	# print("assigned item counts %s and %s" % (str(player_a_item_counts), str(player_b_item_counts)))
 
@@ -48,23 +61,13 @@ def calculate_card_difficulty(card):
 	total_items = sum(player_a_item_counts.values()) + sum(player_b_item_counts.values())
 	return total_item_types * 13 + total_items
 
-# def generate_cards_in_difficulty_range(n, min_difficulty, max_difficulty):
-# 	cards = []
-# 	while len(cards) < n:
-# 		card = generate_card()
-# 		difficulty = calculate_card_difficulty(card)
-# 		if difficulty >= min_difficulty and difficulty <= max_difficulty:
-# 			cards.append(card)
-# 	return cards
-
 def generate_cards_for_player_pair():
 	cards = []
-	for i in range(7):
-		cards.append(generate_card(2))
-	for i in range(7):
-		cards.append(generate_card(3))
-	for i in range(6):
-		cards.append(generate_card(4))
+
+	for (card_count, item_type_count, item_count) in card_specs:
+		for i in xrange(card_count):
+			cards.append(generate_card(item_type_count, item_count))
+
 	return cards
 
 def generate_all_cards():
@@ -75,14 +78,31 @@ def generate_all_cards():
 			cards.append((player_combinations[0], player_combinations[1], player_card[0], player_card[1]))
 	return cards
 
+def make_csv_item_counts(player_item_counts):
+	return [player_item_counts.get("Cannonball", 0), 
+		player_item_counts.get("Parchment", 0), 
+		player_item_counts.get("Jewel", 0), 
+		player_item_counts.get("Bottle", 0)]
+
 
 cards = generate_all_cards()
-print("generated %s cards" % (len(cards)))
+# print("generated %s cards" % (len(cards)))
 
-for card in cards:
-	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
+writer = csv.writer(sys.stdout)
+writer.writerow(["id", "player_a", "a_cannonball_count", "a_parchment_count", "a_jewel_count", "a_bottle_count", 
+	"player_b", "b_cannonball_count", "b_partchment_count", "b_jewel_count", "b_bottle_count", "difficulty"])
+for (card_id, card) in zip(itertools.count(1), cards):
 	difficulty = calculate_card_difficulty(card)
-	print("card %s %s %s %s -> %s" % (player_a, str(player_a_item_counts), player_b, str(player_b_item_counts), difficulty))
+
+	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
+	writer.writerow([card_id, player_a] + make_csv_item_counts(player_a_item_counts) + 
+		[player_b] + make_csv_item_counts(player_b_item_counts) + [difficulty])
+
+# for card in cards:
+# 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
+# 	difficulty = calculate_card_difficulty(card)
+# 	print("card %s %s %s %s -> %s" % (player_a, str(player_a_item_counts), player_b, str(player_b_item_counts), difficulty))
+
 
 # TODO: generate CSV code? -> can then import in game and export to make card files
 

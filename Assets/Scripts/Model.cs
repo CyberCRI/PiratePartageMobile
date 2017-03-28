@@ -114,19 +114,18 @@ public class Model : MonoBehaviour
 
 
 	public TextAsset m_cardsCsv;
+	public int m_cardsForSelf = 10;
+	public int m_cardsForOthers = 2;
 
 	private List<Card> m_cards;
 
 	public List<Card>[] DistributeCards()
 	{
-		// Give 12 cards per player, 10 that concern themselves and 2 that don't 
-
 		List<Card>[] distributedCards = new List<Card>[4]{ new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
 		IList<Card> remainingCards = new List<Card>(m_cards);
 
 		// Each player takes turns getting 1 card that concerns themselves
-		// Take 10 turns of cards that concern others
-		for(int turn = 0; turn < 10; turn++)
+		for(int turn = 0; turn < m_cardsForSelf; turn++)
 		{
 			for(int player = 0; player < 4; player++)
 			{
@@ -143,7 +142,7 @@ public class Model : MonoBehaviour
 			}
 		}
 
-		for(int turn = 10; turn < 12; turn++)
+		for(int turn = 0; turn < m_cardsForOthers; turn++)
 		{
 			for(int player = 0; player < 4; player++)
 			{

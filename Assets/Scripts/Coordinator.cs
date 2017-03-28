@@ -27,14 +27,14 @@ public class Coordinator : MonoBehaviour
 
 	void OnClick()
 	{
-		List<Model.Card>[] distributedCards = m_model.DistributeCards();
+		List<Model.Card>[] distributedCards = m_model.ReliablyDistributeCards();
 
 		m_eyesCardsText.text = MakeListOfCardIds(distributedCards[0]);
 		m_handsCardsText.text = MakeListOfCardIds(distributedCards[1]);
 		m_earsCardsText.text = MakeListOfCardIds(distributedCards[2]);
 		m_mouthCardsText.text = MakeListOfCardIds(distributedCards[3]);
 
-		Model.PieceCount[] finalPieceCounts = Model.CalculateFinalCounts(distributedCards);
+		Model.PieceCount[] finalPieceCounts = m_model.CalculateFinalCounts(distributedCards);
 		m_eyesCountsText.text = MakeListOfCounts(finalPieceCounts[0]);
 		m_handsCountsText.text = MakeListOfCounts(finalPieceCounts[1]);
 		m_earsCountsText.text = MakeListOfCounts(finalPieceCounts[2]);

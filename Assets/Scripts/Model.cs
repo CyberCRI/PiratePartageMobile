@@ -13,7 +13,7 @@ public class Model : MonoBehaviour
 			m_bottleCount = bottleCount;
 		}
 
-		public string ToString()
+		override public string ToString()
 		{
 			return string.Concat(m_cannonballCount, " ", m_parchmentCount, " ", m_jewelCount, " ", m_bottleCount);
 		}
@@ -70,6 +70,15 @@ public class Model : MonoBehaviour
 		return c;
 	}
 
+	// Returns true if the piece counts in a are greater-than or equal to b
+	public static bool GtePieceCounts(PieceCount a, PieceCount b)
+	{
+		return a.m_cannonballCount >= b.m_cannonballCount	
+			&& a.m_parchmentCount >= b.m_parchmentCount	
+			&& a.m_jewelCount >= b.m_jewelCount	
+			&& a.m_bottleCount >= b.m_bottleCount;
+	}
+
 	public static void ProcessCard(PieceCount[] pieceCounts, Card card)
 	{
 		pieceCounts[(int) card.m_playerA] = SubtractPieceCounts(pieceCounts[(int) card.m_playerA], card.m_aWillGive);
@@ -79,13 +88,109 @@ public class Model : MonoBehaviour
 		pieceCounts[(int) card.m_playerA] = AddPieceCounts(pieceCounts[(int) card.m_playerA], card.m_bWillGive);
 	}
 
-	public static PieceCount[] CalculateFinalCounts(List<Card>[] cards) 
+	public static bool HaveEnoughPiecesForCard(PieceCount[] pieceCounts, Card card)
+	{
+		return GtePieceCounts(pieceCounts[(int) card.m_playerA], card.m_aWillGive)
+			&& GtePieceCounts(pieceCounts[(int) card.m_playerB], card.m_bWillGive);
+	}
+
+	public static Player ParsePlayer(string playerName) 
+	{
+		if(playerName == "Eyes") return Player.Eyes;
+		if(playerName == "Hands") return Player.Hands;
+		if(playerName == "Ears") return Player.Ears;
+		if(playerName == "Mouth") return Player.Mouth;
+		throw new System.ArgumentException("Cannot find player");
+	}
+
+	public int m_starting_item_count = 6;
+
+	public TextAsset m_cardsCsv;
+	public int m_cardsForSelf = 8;
+	public int m_cardsForOthers = 4;
+
+	public List<Card>[] DistributeCards()
 	{
 		PieceCount[] pieceCounts = new PieceCount[4] { 
-			new PieceCount(starting_item_count, starting_item_count, starting_item_count, starting_item_count), 
-			new PieceCount(starting_item_count, starting_item_count, starting_item_count, starting_item_count), 
-			new PieceCount(starting_item_count, starting_item_count, starting_item_count, starting_item_count), 
-			new PieceCount(starting_item_count, starting_item_count, starting_item_count, starting_item_count), };
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
+
+		List<Card>[] distributedCards = new List<Card>[4]{ new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
+		IList<Card> remainingCards = new List<Card>(m_cards);
+
+		// Each player takes turns getting 1 card that concerns themselves
+		for(int turn = 0; turn < m_cardsForSelf; turn++)
+		{
+			for(int player = 0; player < 4; player++)
+			{
+				// Take cards that concern self and that we have the pieces for
+				int cardIndex = 0;
+				int attempt = 0;
+				while(true) 
+				{
+					cardIndex = Random.Range(0, remainingCards.Count - 1);
+					if(((int) remainingCards[cardIndex].m_playerA == player || (int) remainingCards[cardIndex].m_playerB == player) &&
+					  HaveEnoughPiecesForCard(pieceCounts, remainingCards[cardIndex])) break;
+
+					if(attempt++ > remainingCards.Count) throw new DistributionFailureException();
+				}
+
+				ProcessCard(pieceCounts, remainingCards[cardIndex]);
+				distributedCards[player].Add(remainingCards[cardIndex]);
+				remainingCards.RemoveAt(cardIndex);
+			}
+		}
+
+		for(int turn = 0; turn < m_cardsForOthers; turn++)
+		{
+			for(int player = 0; player < 4; player++)
+			{
+				// Take cards that DON'T concern self and that we have the pieces for
+				int cardIndex = 0;
+				int attempt = 0;
+				while(true) 
+				{
+					cardIndex = Random.Range(0, remainingCards.Count - 1);
+					if((int) remainingCards[cardIndex].m_playerA != player && (int) remainingCards[cardIndex].m_playerB != player &&
+					  HaveEnoughPiecesForCard(pieceCounts, remainingCards[cardIndex])) break;
+
+					if(attempt++ > remainingCards.Count) throw new DistributionFailureException();
+				}
+
+				ProcessCard(pieceCounts, remainingCards[cardIndex]);
+				distributedCards[player].Add(remainingCards[cardIndex]);
+				remainingCards.RemoveAt(cardIndex);
+			}
+		}
+
+		return distributedCards;
+	}
+
+	// Calls DistributeCards() until it works
+	public List<Card>[] ReliablyDistributeCards()
+	{
+		while(true)
+		{
+			try 
+			{
+				return DistributeCards();
+			}
+			catch(DistributionFailureException) 
+			{
+				Debug.Log("DistributeCards failed, trying again");
+			}
+		}
+	}
+
+	public PieceCount[] CalculateFinalCounts(List<Card>[] cards) 
+	{
+		PieceCount[] pieceCounts = new PieceCount[4] { 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
 		for(int i = 0; i < 4; i++)
 		{
 			foreach(var card in cards[i])
@@ -97,70 +202,14 @@ public class Model : MonoBehaviour
 		return pieceCounts;
 	}
 
-// { Eyes = 0, Hands, Ears, Mouth }; 
-	public static Player ParsePlayer(string playerName) 
-	{
-		if(playerName == "Eyes") return Player.Eyes;
-		if(playerName == "Hands") return Player.Hands;
-		if(playerName == "Ears") return Player.Ears;
-		if(playerName == "Mouth") return Player.Mouth;
-		throw new System.ArgumentException("Cannot find player");
-	}
 
-	public enum CsvColumn { Id = 0, PlayerA, ACannonballCount, AParchmentCount, AJewelCount, ABottleCount, 
+	enum CsvColumn { Id = 0, PlayerA, ACannonballCount, AParchmentCount, AJewelCount, ABottleCount, 
 		PlayerB, BCannonballCount, BParchmentCount, BJewelCount, BBottleCount, Difficulty };
 
-	public const int starting_item_count = 20;
+	class DistributionFailureException : System.Exception {};
 
+	List<Card> m_cards;
 
-	public TextAsset m_cardsCsv;
-	public int m_cardsForSelf = 10;
-	public int m_cardsForOthers = 2;
-
-	private List<Card> m_cards;
-
-	public List<Card>[] DistributeCards()
-	{
-		List<Card>[] distributedCards = new List<Card>[4]{ new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
-		IList<Card> remainingCards = new List<Card>(m_cards);
-
-		// Each player takes turns getting 1 card that concerns themselves
-		for(int turn = 0; turn < m_cardsForSelf; turn++)
-		{
-			for(int player = 0; player < 4; player++)
-			{
-				// Try to take cards that concern self
-				int cardIndex = 0;
-				for(int attempt = 0; attempt < 10; attempt++)
-				{
-					cardIndex = Random.Range(0, remainingCards.Count - 1);
-					if((int) remainingCards[cardIndex].m_playerA == player || (int) remainingCards[cardIndex].m_playerB == player) break;
-				}
-
-				distributedCards[player].Add(remainingCards[cardIndex]);
-				remainingCards.RemoveAt(cardIndex);
-			}
-		}
-
-		for(int turn = 0; turn < m_cardsForOthers; turn++)
-		{
-			for(int player = 0; player < 4; player++)
-			{
-				// Try to take cards that don't concern self
-				int cardIndex = 0;
-				for(int attempt = 0; attempt < 10; attempt++)
-				{
-					cardIndex = Random.Range(0, remainingCards.Count - 1);
-					if((int) remainingCards[cardIndex].m_playerA != player && (int) remainingCards[cardIndex].m_playerB != player) break;
-				}
-				
-				distributedCards[player].Add(remainingCards[cardIndex]);
-				remainingCards.RemoveAt(cardIndex);
-			}
-		}
-
-		return distributedCards;
-	}
 
 	void Start()
 	{

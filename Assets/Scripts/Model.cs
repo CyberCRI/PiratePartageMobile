@@ -5,10 +5,10 @@ public class Model : MonoBehaviour
 {
 	public struct PieceCount 
 	{
-		public PieceCount(int cannonballCount, int partchmentCount, int jewelCount, int bottleCount)
+		public PieceCount(int cannonballCount, int parchmentCount, int jewelCount, int bottleCount)
 		{
 			m_cannonballCount = cannonballCount;
-			m_parchmentCount = partchmentCount;
+			m_parchmentCount = parchmentCount;
 			m_jewelCount = jewelCount;
 			m_bottleCount = bottleCount;
 		}
@@ -70,6 +70,24 @@ public class Model : MonoBehaviour
 		return c;
 	}
 
+	public static int DifferencePieceCounts(PieceCount a, PieceCount b)
+	{
+		return Mathf.Abs(a.m_cannonballCount - b.m_cannonballCount) 
+			+ Mathf.Abs(a.m_parchmentCount - b.m_parchmentCount) 
+			+ Mathf.Abs(a.m_jewelCount - b.m_jewelCount) 
+			+ Mathf.Abs(a.m_bottleCount - b.m_bottleCount); 
+	}
+
+	public static int DifferencePieceCounts(PieceCount[] targetPieceCounts, PieceCount[] actualPieceCounts)
+	{
+		int difference = 0;
+		for(int i = 0; i < 4; i++)
+		{
+			difference += DifferencePieceCounts(targetPieceCounts[i], actualPieceCounts[i]);
+		}
+		return difference;
+	}
+
 	// Returns true if the piece counts in a are greater-than or equal to b
 	public static bool GtePieceCounts(PieceCount a, PieceCount b)
 	{
@@ -103,8 +121,8 @@ public class Model : MonoBehaviour
 		throw new System.ArgumentException("Cannot find player");
 	}
 
-	public int m_starting_item_count = 6;
 
+	public int m_starting_item_count = 6;
 	public TextAsset m_cardsCsv;
 	public int m_cardsForSelf = 8;
 	public int m_cardsForOthers = 4;

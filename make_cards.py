@@ -66,7 +66,12 @@ def generate_cards_for_player_pair():
 
 	for (card_count, item_type_count, item_count) in card_specs:
 		for i in xrange(card_count):
-			cards.append(generate_card(item_type_count, item_count))
+			# Avoid duplicates by looping until a unique card is found
+			while True:
+				card = generate_card(item_type_count, item_count)
+				if card not in cards:
+					cards.append(card)
+					break
 
 	return cards
 
@@ -79,10 +84,10 @@ def generate_all_cards():
 	return cards
 
 def make_csv_item_counts(player_item_counts):
-	return [str(player_item_counts.get("Cannonball", 0)) + ".png", 
-		str(player_item_counts.get("Parchment", 0)) + ".png", 
-		str(player_item_counts.get("Jewel", 0)) + ".png", 
-		str(player_item_counts.get("Bottle", 0)) + ".png"]
+	return [player_item_counts.get("Cannonball", 0), 
+		player_item_counts.get("Parchment", 0), 
+		player_item_counts.get("Jewel", 0), 
+		player_item_counts.get("Bottle", 0)]
 
 
 cards = generate_all_cards()
@@ -95,14 +100,5 @@ for (card_id, card) in zip(itertools.count(1), cards):
 	difficulty = calculate_card_difficulty(card)
 
 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
-	writer.writerow([card_id, player_a + ".png"] + make_csv_item_counts(player_a_item_counts) + 
-		[player_b + ".png"] + make_csv_item_counts(player_b_item_counts) + [difficulty])
-
-# for card in cards:
-# 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
-# 	difficulty = calculate_card_difficulty(card)
-# 	print("card %s %s %s %s -> %s" % (player_a, str(player_a_item_counts), player_b, str(player_b_item_counts), difficulty))
-
-
-# TODO: generate CSV code? -> can then import in game and export to make card files
-
+	writer.writerow([card_id, player_a] + make_csv_item_counts(player_a_item_counts) + 
+		[player_b] + make_csv_item_counts(player_b_item_counts) + [difficulty])

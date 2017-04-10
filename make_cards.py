@@ -79,10 +79,10 @@ def generate_all_cards():
 	return cards
 
 def make_csv_item_counts(player_item_counts):
-	return [player_item_counts.get("Cannonball", 0), 
-		player_item_counts.get("Parchment", 0), 
-		player_item_counts.get("Jewel", 0), 
-		player_item_counts.get("Bottle", 0)]
+	return [str(player_item_counts.get("Cannonball", 0)) + ".png", 
+		str(player_item_counts.get("Parchment", 0)) + ".png", 
+		str(player_item_counts.get("Jewel", 0)) + ".png", 
+		str(player_item_counts.get("Bottle", 0)) + ".png"]
 
 
 cards = generate_all_cards()
@@ -90,13 +90,13 @@ cards = generate_all_cards()
 
 writer = csv.writer(sys.stdout)
 writer.writerow(["id", "player_a", "a_cannonball_count", "a_parchment_count", "a_jewel_count", "a_bottle_count", 
-	"player_b", "b_cannonball_count", "b_partchment_count", "b_jewel_count", "b_bottle_count", "difficulty"])
+	"player_b", "b_cannonball_count", "b_parchment_count", "b_jewel_count", "b_bottle_count", "difficulty"])
 for (card_id, card) in zip(itertools.count(1), cards):
 	difficulty = calculate_card_difficulty(card)
 
 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
-	writer.writerow([card_id, player_a] + make_csv_item_counts(player_a_item_counts) + 
-		[player_b] + make_csv_item_counts(player_b_item_counts) + [difficulty])
+	writer.writerow([card_id, player_a + ".png"] + make_csv_item_counts(player_a_item_counts) + 
+		[player_b + ".png"] + make_csv_item_counts(player_b_item_counts) + [difficulty])
 
 # for card in cards:
 # 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card

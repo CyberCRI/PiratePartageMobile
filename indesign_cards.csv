@@ -1,4 +1,4 @@
-id,player_a,a_cannonball_count,a_parchment_count,a_jewel_count,a_bottle_count,player_b,b_cannonball_count,b_parchment_count,b_jewel_count,b_bottle_count,difficulty
+id,@player_a,@a_cannonball_count,@a_parchment_count,@a_jewel_count,@a_bottle_count,@player_b,@b_cannonball_count,@b_parchment_count,@b_jewel_count,@b_bottle_count,difficulty
 1,Eyes.png,0.png,0.png,0.png,2.png,Hands.png,0.png,0.png,2.png,0.png,30
 2,Eyes.png,0.png,0.png,2.png,0.png,Hands.png,0.png,2.png,0.png,0.png,30
 3,Eyes.png,0.png,0.png,4.png,0.png,Hands.png,4.png,0.png,0.png,0.png,34

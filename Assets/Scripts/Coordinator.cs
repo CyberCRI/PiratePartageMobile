@@ -61,6 +61,8 @@ public class Coordinator : MonoBehaviour
 
 	void Start()
 	{
+		Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
 		m_shuffleSection.transform.Find("ShuffleButton").GetComponent<Button>().onClick.AddListener(OnShuffleButtonClick);
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);

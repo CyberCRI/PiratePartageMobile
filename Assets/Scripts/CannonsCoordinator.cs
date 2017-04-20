@@ -15,11 +15,12 @@ public class CannonsCoordinator : MonoBehaviour
 	public Color m_buttonToPressColor = Color.black;
 	public Color m_buttonGoodPressColor = Color.green;
 	public Color m_buttonBadPressColor = Color.red;
-	
-	public int m_pointGoal = 4;
+
 	public float m_timePerRound = 3f;
 	public float m_timeBetweenRounds = 3f;
 
+	public delegate void OnRoundOver(bool succeeded, int successCount, int failureCount);
+	public event OnRoundOver m_onRoundOver;	
 
 	// Declared in counter-clockwise order
 	enum SpotIndex 
@@ -51,11 +52,13 @@ public class CannonsCoordinator : MonoBehaviour
 	}
 
 	bool[] m_fireButtonsWereHit = new bool[4];
-	int m_points = 0;
 	GameObject m_boat;
 	State m_state = State.BeforeRound;
 	float m_startedStateTime;
 	SpotIndex m_spotIndex;
+	int m_successCount = 0;
+	int m_failureCount = 0;
+
 
 	void Start () 
 	{
@@ -121,11 +124,14 @@ public class CannonsCoordinator : MonoBehaviour
 		if(HitRightButtons())
 		{
 			m_successText.SetActive(true);
-			m_points += CountPointsForSpot(m_spotIndex);
+			m_successCount++;
+			if(m_onRoundOver != null) m_onRoundOver(true, m_successCount, m_failureCount);
 		}
 		else
 		{
 			m_failureText.SetActive(true);
+			m_failureCount++;
+			if(m_onRoundOver != null) m_onRoundOver(false, m_successCount, m_failureCount);
 		}
 
 		Object.Destroy(m_boat);

@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Text;
+using UnityEngine.SceneManagement;
 
 public class Coordinator : MonoBehaviour
 {
-	enum State { Shuffle, Play, Count, End };
+	enum State { Shuffle, Play, Firing, Count, End };
 
 	public Model m_model;
 
@@ -15,11 +16,18 @@ public class Coordinator : MonoBehaviour
 	public GameObject m_endSection;
 
 	public float m_playTime = 4 * 60f;
+	public int m_firingSuccessGoal = 3;
+	public int m_firingFailureLimit = 3;
+	public int m_firingSessionCount = 1;
 
 	State m_state = State.Shuffle;
 	List<Model.Card>[] m_distributedCards;
 	Model.PieceCount[] m_finalPieceCounts;
-	float m_startTime;
+	float m_elapsedPlayTime;
+	float[] m_firingSessionStartTimes;
+	int m_firingSessionsComplete;
+	AsyncOperation m_sceneChangeAsyncOp;
+	CannonsCoordinator m_cannonsCoordinator;
 
 
 	static string MakeListOfCardIds(List<Model.Card> cards)
@@ -64,24 +72,93 @@ public class Coordinator : MonoBehaviour
 		switch(m_state)
 		{
 			case State.Play:
-				if(m_startTime + m_playTime < Time.time)
+				if(m_sceneChangeAsyncOp != null)
 				{
-					m_state = State.Count;
-					m_playSection.SetActive(false);
-					m_countSection.SetActive(true);
-				}
+					if(m_sceneChangeAsyncOp.isDone)
+					{
+						m_sceneChangeAsyncOp = null;
+						
+						// Show timer
+						m_playSection.SetActive(true);
+					}
+				} 
 				else
 				{
-					UpdateInPlay();				
+					m_elapsedPlayTime += Time.deltaTime;
+					if(m_elapsedPlayTime >= m_playTime)
+					{
+						m_state = State.Count;
+						m_playSection.SetActive(false);
+						m_countSection.SetActive(true);
+					}
+					else if(m_firingSessionsComplete < m_firingSessionCount && m_elapsedPlayTime >= m_firingSessionStartTimes[m_firingSessionsComplete])
+					{
+						m_state = State.Firing;
+						m_sceneChangeAsyncOp = SceneManager.LoadSceneAsync("Cannons", LoadSceneMode.Additive);
+					}
+					else
+					{
+						UpdateInPlay();				
+					}					
+				}
+				break;
+
+			case State.Firing:
+				if(m_sceneChangeAsyncOp != null)
+				{
+					if(m_sceneChangeAsyncOp.isDone)
+					{
+						m_sceneChangeAsyncOp = null;
+						StartFiringSession();
+					}
 				}
 				break;
 		}
 	}
 
+	void OnFiringRoundOver(bool succeeded, int successCount, int failureCount)
+	{
+		if(successCount >= m_firingSuccessGoal)
+		{
+			Debug.Log("Won firing session");
+			EndFiringSession();
+
+			m_state = State.Play;
+		}
+		else if(failureCount >= m_firingFailureLimit)
+		{
+			Debug.Log("Lost firing session");
+			EndFiringSession();
+
+			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You lose";
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "You were destroyed in battle";
+			m_endSection.SetActive(true);
+			m_state = State.End;
+		}
+	}
+
+	void StartFiringSession()
+	{
+		// Hide timer
+		m_playSection.SetActive(false);
+
+		// Attach to event handler
+		m_cannonsCoordinator = GameObject.Find("CannonsCoordinator").GetComponent<CannonsCoordinator>();
+		m_cannonsCoordinator.m_onRoundOver += OnFiringRoundOver;
+	}
+
+	void EndFiringSession()
+	{
+		m_cannonsCoordinator.m_onRoundOver -= OnFiringRoundOver;
+		m_sceneChangeAsyncOp = SceneManager.UnloadSceneAsync("Cannons");
+
+		m_firingSessionsComplete++;
+	}
+
 	void UpdateInPlay()
 	{
 		// Update timer
-		float timeLeft = m_startTime + m_playTime - Time.time;
+		float timeLeft = m_playTime - m_elapsedPlayTime;
 		int minutes = ((int) timeLeft) / 60;
 		int seconds = ((int) timeLeft) % 60;
 		m_playSection.transform.Find("Timer").GetComponent<Text>().text = string.Concat(minutes, ":", seconds < 10 ? "0" : "", seconds);
@@ -106,7 +183,10 @@ public class Coordinator : MonoBehaviour
 		m_shuffleSection.SetActive(false);
 		m_playSection.SetActive(true);
 
-		m_startTime = Time.time;
+		m_firingSessionStartTimes = CalculateFiringSessionTimes(m_playTime, m_firingSessionCount);
+		m_firingSessionsComplete = 0;
+
+		m_elapsedPlayTime = 0;
 		m_state = State.Play;
 	}
 
@@ -152,5 +232,17 @@ public class Coordinator : MonoBehaviour
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
 
 		m_state = State.Shuffle;
+	}
+
+	static float[] CalculateFiringSessionTimes(float playTime, int firingSessionCount)
+	{
+		// Evenly place them in the play time
+		float interval = playTime / (firingSessionCount + 1);
+		float[] times = new float[firingSessionCount];
+		for(var i = 0; i < firingSessionCount; i++) 
+		{
+			times[i] = (i + 1) * interval;
+		}
+		return times;
 	}
 }

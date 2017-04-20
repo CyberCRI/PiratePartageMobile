@@ -127,14 +127,27 @@ public class Coordinator : MonoBehaviour
 
 		// Were the players correct?
 		int difference = Model.DifferencePieceCounts(m_finalPieceCounts, actualPieceCounts);
-		string results = (difference == 0 ? "You won" : "You lose");
-		m_endSection.transform.Find("Results").GetComponent<Text>().text = results;
+		if(difference == 0)
+		{
+			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You won";
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "";
+		}
+		else
+		{
+			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You lose";
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = string.Concat(difference, " pieces are wrong");
+		}
 	}
 
 	void OnEndDoneButtonClick()
 	{
 		m_endSection.SetActive(false);
 		m_shuffleSection.SetActive(true);
+
+		m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = "";
+		m_shuffleSection.transform.Find("HandsCards").GetComponent<Text>().text = "";
+		m_shuffleSection.transform.Find("EarsCards").GetComponent<Text>().text = "";
+		m_shuffleSection.transform.Find("MouthCards").GetComponent<Text>().text = "";
 
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
 

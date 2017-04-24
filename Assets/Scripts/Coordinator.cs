@@ -9,6 +9,7 @@ public class Coordinator : MonoBehaviour
 	enum State { Shuffle, Play, Firing, Count, End };
 
 	public Model m_model;
+	public AudioSource m_musicSource;
 
 	public GameObject m_shuffleSection;
 	public GameObject m_playSection;
@@ -144,15 +145,24 @@ public class Coordinator : MonoBehaviour
 		// Hide timer
 		m_playSection.SetActive(false);
 
+		// Stop music
+		m_musicSource.Pause();
+
 		// Attach to event handler
 		m_cannonsCoordinator = GameObject.Find("CannonsCoordinator").GetComponent<CannonsCoordinator>();
 		m_cannonsCoordinator.m_onRoundOver += OnFiringRoundOver;
+
+		// Stop audio listener in cannons scene
+		GameObject.Find("Cannons Main Camera").GetComponent<AudioListener>().enabled = false;
 	}
 
 	void EndFiringSession()
 	{
 		m_cannonsCoordinator.m_onRoundOver -= OnFiringRoundOver;
 		m_sceneChangeAsyncOp = SceneManager.UnloadSceneAsync("Cannons");
+
+		// Start music again
+		m_musicSource.Play();
 
 		m_firingSessionsComplete++;
 	}

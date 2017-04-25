@@ -21,6 +21,8 @@ public class Coordinator : MonoBehaviour
 	public int m_firingFailureLimit = 3;
 	public int m_firingSessionCount = 1;
 
+	public GameObject m_settingsSection;
+
 	State m_state = State.Shuffle;
 	List<Model.Card>[] m_distributedCards;
 	Model.PieceCount[] m_finalPieceCounts;
@@ -178,6 +180,9 @@ public class Coordinator : MonoBehaviour
 
 	void OnShuffleButtonClick()
 	{
+		UpdateSettings();
+
+
 		m_distributedCards = m_model.ReliablyDistributeCards();
 
 		m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[0]);
@@ -192,6 +197,9 @@ public class Coordinator : MonoBehaviour
 
 	void OnStartButtonClick()
 	{
+		UpdateSettings();
+
+		
 		m_shuffleSection.SetActive(false);
 		m_playSection.SetActive(true);
 
@@ -244,6 +252,14 @@ public class Coordinator : MonoBehaviour
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
 
 		m_state = State.Shuffle;
+	}
+
+	void UpdateSettings()
+	{
+		m_model.m_cardsForSelf = int.Parse(m_settingsSection.transform.Find("CardsForSelf").GetComponent<InputField>().text);
+		m_model.m_cardsForOthers = int.Parse(m_settingsSection.transform.Find("CardsForOthers").GetComponent<InputField>().text);
+		m_playTime = int.Parse(m_settingsSection.transform.Find("PlayTime").GetComponent<InputField>().text);
+		m_firingSessionCount = int.Parse(m_settingsSection.transform.Find("FiringSessionCount").GetComponent<InputField>().text);
 	}
 
 	static float[] CalculateFiringSessionTimes(float playTime, int firingSessionCount)

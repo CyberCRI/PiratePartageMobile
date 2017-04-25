@@ -136,7 +136,7 @@ public class Model : MonoBehaviour
 			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
 
 		List<Card>[] distributedCards = new List<Card>[4]{ new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
-		IList<Card> remainingCards = new List<Card>(m_cards);
+		List<Card> remainingCards = new List<Card>(m_cards);
 
 		// Each player takes turns getting 1 card that concerns themselves
 		for(int turn = 0; turn < m_cardsForSelf; turn++)
@@ -218,6 +218,29 @@ public class Model : MonoBehaviour
 		}
 
 		return pieceCounts;
+	}
+
+	public bool CardOrderIsPlayable(List<Card> cards)
+	{
+		PieceCount[] pieceCounts = new PieceCount[4] { 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
+			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
+
+		for(int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+		{
+			if(!HaveEnoughPiecesForCard(pieceCounts, cards[cardIndex])) return false;
+
+			ProcessCard(pieceCounts, cards[cardIndex]);
+		}
+
+		return true;
+	}
+
+	public bool AllCardOrdersArePlayable(List<Card> cards)
+	{
+		
 	}
 
 

@@ -6,21 +6,19 @@ import sys
 
 players = ("Eyes", "Hands", "Ears", "Mouth")
 item_types = ("Cannonball", "Parchment", "Jewel", "Bottle")
+suits = ("A", "B", "C", "D")
 
 # for each card, give the card count, item_types_count, item_count
 card_specs = [
-	# 7 cards of 2 item types
-	(2, 2, 2),
-	(3, 2, 4),
-	(2, 2, 6),
-	# 7 cards of 3 item types
-	(2, 3, 3),
-	(3, 3, 4),
-	(2, 3, 6),
-	# 6 cards of 4 item types
-	(2, 4, 4),
-	(2, 4, 5),
-	(2, 4, 6),
+	# 3 cards of 2 item types
+	(1, 2, 2),
+	(1, 2, 3),
+	(1, 2, 4),
+	# 2 cards of 3 item types
+	(1, 3, 3),
+	(1, 3, 4),
+	# 1 cards of 4 item types
+	(1, 4, 4),
 	]
 
 def generate_item_counts(player_item_types, item_count):
@@ -89,16 +87,20 @@ def make_csv_item_counts(player_item_counts):
 		player_item_counts.get("Jewel", 0), 
 		player_item_counts.get("Bottle", 0)]
 
-
 cards = generate_all_cards()
 # print("generated %s cards" % (len(cards)))
 
 writer = csv.writer(sys.stdout)
 writer.writerow(["id", "player_a", "a_cannonball_count", "a_parchment_count", "a_jewel_count", "a_bottle_count", 
 	"player_b", "b_cannonball_count", "b_parchment_count", "b_jewel_count", "b_bottle_count", "difficulty"])
-for (card_id, card) in zip(itertools.count(1), cards):
+for (card_index, card) in zip(itertools.count(), cards):
 	difficulty = calculate_card_difficulty(card)
 
+	cards_per_suit = len(cards) / len(suits)
+	suit = suits[card_index / cards_per_suit]
+	number = card_index % cards_per_suit + 1
+	card_id = suit + str(number)
+ 
 	(player_a, player_b, player_a_item_counts, player_b_item_counts) = card
 	writer.writerow([card_id, player_a] + make_csv_item_counts(player_a_item_counts) + 
 		[player_b] + make_csv_item_counts(player_b_item_counts) + [difficulty])

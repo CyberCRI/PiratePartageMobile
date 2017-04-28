@@ -32,7 +32,7 @@ public class Model : MonoBehaviour
 
 	public struct Card
 	{
-		public Card(int id, Player playerA, PieceCount aWillGive, Player playerB, PieceCount bWillGive)
+		public Card(string id, Player playerA, PieceCount aWillGive, Player playerB, PieceCount bWillGive)
 		{
 			m_id = id;
 			m_playerA = playerA;
@@ -41,13 +41,18 @@ public class Model : MonoBehaviour
 			m_bWillGive = bWillGive;
 		}
 
-		public int m_id;
+		public string m_id;
 
 		public Player m_playerA;
 		public PieceCount m_aWillGive;
 
 		public Player m_playerB;
 		public PieceCount m_bWillGive;	
+	}
+
+	public static int CompareCards(Card a, Card b)
+	{
+		return a.m_id.CompareTo(b.m_id);
 	}
 
 	public static PieceCount AddPieceCounts(PieceCount a, PieceCount b)
@@ -106,6 +111,13 @@ public class Model : MonoBehaviour
 		pieceCounts[(int) card.m_playerA] = AddPieceCounts(pieceCounts[(int) card.m_playerA], card.m_bWillGive);
 	}
 
+	// Subtract from piece counts the required pieces for the card
+	public static void ProcessCardRequirements(PieceCount[] pieceCounts, Card card)
+	{
+		pieceCounts[(int) card.m_playerA] = SubtractPieceCounts(pieceCounts[(int) card.m_playerA], card.m_aWillGive);
+		pieceCounts[(int) card.m_playerB] = SubtractPieceCounts(pieceCounts[(int) card.m_playerB], card.m_bWillGive);
+	}
+
 	public static bool HaveEnoughPiecesForCard(PieceCount[] pieceCounts, Card card)
 	{
 		return GtePieceCounts(pieceCounts[(int) card.m_playerA], card.m_aWillGive)
@@ -136,26 +148,31 @@ public class Model : MonoBehaviour
 			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
 
 		List<Card>[] distributedCards = new List<Card>[4]{ new List<Card>(), new List<Card>(), new List<Card>(), new List<Card>() };
+
 		List<Card> remainingCards = new List<Card>(m_cards);
+		Utility.Shuffle(remainingCards);
 
 		// Each player takes turns getting 1 card that concerns themselves
 		for(int turn = 0; turn < m_cardsForSelf; turn++)
 		{
 			for(int player = 0; player < 4; player++)
 			{
-				// Take cards that concern self and that we have the pieces for
+				// Take cards that concern self and that both players have the pieces for
 				int cardIndex = 0;
-				int attempt = 0;
 				while(true) 
 				{
-					cardIndex = Random.Range(0, remainingCards.Count - 1);
 					if(((int) remainingCards[cardIndex].m_playerA == player || (int) remainingCards[cardIndex].m_playerB == player) &&
 					  HaveEnoughPiecesForCard(pieceCounts, remainingCards[cardIndex])) break;
 
-					if(attempt++ > remainingCards.Count) throw new DistributionFailureException();
+					cardIndex++;
+					if(cardIndex >= remainingCards.Count) 
+					{
+						// There is no card that fits the requirements
+						throw new DistributionFailureException();
+					}
 				}
 
-				ProcessCard(pieceCounts, remainingCards[cardIndex]);
+				ProcessCardRequirements(pieceCounts, remainingCards[cardIndex]);
 				distributedCards[player].Add(remainingCards[cardIndex]);
 				remainingCards.RemoveAt(cardIndex);
 			}
@@ -165,22 +182,31 @@ public class Model : MonoBehaviour
 		{
 			for(int player = 0; player < 4; player++)
 			{
-				// Take cards that DON'T concern self and that we have the pieces for
+				// Take cards that DON'T concern self and that both players have the pieces for
 				int cardIndex = 0;
-				int attempt = 0;
 				while(true) 
 				{
-					cardIndex = Random.Range(0, remainingCards.Count - 1);
 					if((int) remainingCards[cardIndex].m_playerA != player && (int) remainingCards[cardIndex].m_playerB != player &&
 					  HaveEnoughPiecesForCard(pieceCounts, remainingCards[cardIndex])) break;
 
-					if(attempt++ > remainingCards.Count) throw new DistributionFailureException();
+					cardIndex++;
+					if(cardIndex >= remainingCards.Count) 
+					{
+						// There is no card that fits the requirements
+						throw new DistributionFailureException();
+					}
 				}
 
-				ProcessCard(pieceCounts, remainingCards[cardIndex]);
+				ProcessCardRequirements(pieceCounts, remainingCards[cardIndex]);
 				distributedCards[player].Add(remainingCards[cardIndex]);
 				remainingCards.RemoveAt(cardIndex);
 			}
+		}
+
+		// Sort cards for easy distribution
+		for(int player = 0; player < 4; player++)
+		{
+			distributedCards[player].Sort(CompareCards);
 		}
 
 		return distributedCards;
@@ -220,29 +246,6 @@ public class Model : MonoBehaviour
 		return pieceCounts;
 	}
 
-	public bool CardOrderIsPlayable(List<Card> cards)
-	{
-		PieceCount[] pieceCounts = new PieceCount[4] { 
-			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
-			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
-			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), 
-			new PieceCount(m_starting_item_count, m_starting_item_count, m_starting_item_count, m_starting_item_count), };
-
-		for(int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
-		{
-			if(!HaveEnoughPiecesForCard(pieceCounts, cards[cardIndex])) return false;
-
-			ProcessCard(pieceCounts, cards[cardIndex]);
-		}
-
-		return true;
-	}
-
-	public bool AllCardOrdersArePlayable(List<Card> cards)
-	{
-		
-	}
-
 
 	enum CsvColumn { Id = 0, PlayerA, ACannonballCount, AParchmentCount, AJewelCount, ABottleCount, 
 		PlayerB, BCannonballCount, BParchmentCount, BJewelCount, BBottleCount, Difficulty };
@@ -264,7 +267,7 @@ public class Model : MonoBehaviour
 			if(lines[i].Length == 0) continue; // Skip empty lines
 
 			var columns = lines[i].Split(',');
-			m_cards.Add(new Card(int.Parse(columns[(int) CsvColumn.Id]), 
+			m_cards.Add(new Card(columns[(int) CsvColumn.Id], 
 				ParsePlayer(columns[(int) CsvColumn.PlayerA]), 
 				new PieceCount(int.Parse(columns[(int) CsvColumn.ACannonballCount]), int.Parse(columns[(int) CsvColumn.AParchmentCount]), int.Parse(columns[(int) CsvColumn.AJewelCount]), int.Parse(columns[(int) CsvColumn.ABottleCount])),
 				ParsePlayer(columns[(int) CsvColumn.PlayerB]), 

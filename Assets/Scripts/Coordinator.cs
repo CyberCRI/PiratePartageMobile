@@ -258,6 +258,8 @@ public class Coordinator : MonoBehaviour
 	{
 		m_model.m_cardsForSelf = int.Parse(m_settingsSection.transform.Find("CardsForSelf").GetComponent<InputField>().text);
 		m_model.m_cardsForOthers = int.Parse(m_settingsSection.transform.Find("CardsForOthers").GetComponent<InputField>().text);
+		m_model.m_starting_item_count = int.Parse(m_settingsSection.transform.Find("StartingPieceCount").GetComponent<InputField>().text);
+
 		m_playTime = int.Parse(m_settingsSection.transform.Find("PlayTime").GetComponent<InputField>().text);
 		m_firingSessionCount = int.Parse(m_settingsSection.transform.Find("FiringSessionCount").GetComponent<InputField>().text);
 	}

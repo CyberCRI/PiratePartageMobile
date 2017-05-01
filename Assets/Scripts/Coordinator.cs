@@ -205,10 +205,6 @@ public class Coordinator : MonoBehaviour
 			GetShuffleSectionTitle((Side) sideIndex).text = Model.PlayerNames[(int) player];
 			GetShuffleSectionCards((Side) sideIndex).text = MakeListOfCardIds(m_distributedCards[(int) player]);
 		}
-		// m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[0]);
-		// m_shuffleSection.transform.Find("HandsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[1]);
-		// m_shuffleSection.transform.Find("EarsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[2]);
-		// m_shuffleSection.transform.Find("MouthCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[3]);
 
 		m_finalPieceCounts = m_model.CalculateFinalCounts(m_distributedCards);
 
@@ -261,10 +257,12 @@ public class Coordinator : MonoBehaviour
 		m_endSection.SetActive(false);
 		m_shuffleSection.SetActive(true);
 
-		m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = "";
-		m_shuffleSection.transform.Find("HandsCards").GetComponent<Text>().text = "";
-		m_shuffleSection.transform.Find("EarsCards").GetComponent<Text>().text = "";
-		m_shuffleSection.transform.Find("MouthCards").GetComponent<Text>().text = "";
+		// Clear the UI
+		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
+		{
+			GetShuffleSectionTitle((Side) sideIndex).text = "";
+			GetShuffleSectionCards((Side) sideIndex).text = ""; 
+		}
 
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
 

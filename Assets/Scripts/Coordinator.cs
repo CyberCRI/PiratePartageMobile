@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Coordinator : MonoBehaviour
 {
-	enum State { Shuffle, Play, Firing, Count, End };
+	enum State { Settings, Shuffle, Play, Firing, Count, End };
 
 	public Model m_model;
 	public AudioSource m_musicSource;
@@ -23,7 +23,7 @@ public class Coordinator : MonoBehaviour
 
 	public GameObject m_settingsSection;
 
-	State m_state = State.Shuffle;
+	State m_state = State.Settings;
 	List<Model.Card>[] m_distributedCards;
 	Model.PieceCount[] m_finalPieceCounts;
 	float m_elapsedPlayTime;
@@ -66,6 +66,7 @@ public class Coordinator : MonoBehaviour
 	{
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
+		m_settingsSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnSettingsButtonClick);		
 		m_shuffleSection.transform.Find("ShuffleButton").GetComponent<Button>().onClick.AddListener(OnShuffleButtonClick);
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);
@@ -178,11 +179,16 @@ public class Coordinator : MonoBehaviour
 		m_playSection.transform.Find("Timer").GetComponent<Text>().text = string.Concat(minutes, ":", seconds < 10 ? "0" : "", seconds);
 	}
 
-	void OnShuffleButtonClick()
+	void OnSettingsButtonClick()
 	{
 		UpdateSettings();
 
+		m_settingsSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}
 
+	void OnShuffleButtonClick()
+	{
 		m_distributedCards = m_model.ReliablyDistributeCards();
 
 		m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[0]);
@@ -197,9 +203,6 @@ public class Coordinator : MonoBehaviour
 
 	void OnStartButtonClick()
 	{
-		UpdateSettings();
-
-		
 		m_shuffleSection.SetActive(false);
 		m_playSection.SetActive(true);
 

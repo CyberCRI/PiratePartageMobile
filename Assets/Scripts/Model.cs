@@ -139,6 +139,8 @@ public class Model : MonoBehaviour
 	public int m_cardsForSelf = 8;
 	public int m_cardsForOthers = 4;
 
+	public static string[] PlayerNames = new string[4]{ "Captain Skulleyes", "Captain Lockjaw", "Captain Bonedust", "Captain Tins" };
+
 	public List<Card>[] DistributeCards()
 	{
 		PieceCount[] pieceCounts = new PieceCount[4] { 

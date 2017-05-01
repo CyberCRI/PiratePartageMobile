@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class Coordinator : MonoBehaviour
 {
 	enum State { Settings, Shuffle, Play, Firing, Count, End };
+	enum Side { L = 0, B, R, T }; // Left, bottom, right, top
 
 	public Model m_model;
 	public AudioSource m_musicSource;
@@ -31,6 +32,7 @@ public class Coordinator : MonoBehaviour
 	int m_firingSessionsComplete;
 	AsyncOperation m_sceneChangeAsyncOp;
 	CannonsCoordinator m_cannonsCoordinator;
+	List<Model.Player> m_sideToPlayer = new List<Model.Player>{ Model.Player.Eyes, Model.Player.Hands, Model.Player.Ears, Model.Player.Mouth };
 
 
 	static string MakeListOfCardIds(List<Model.Card> cards)
@@ -189,12 +191,24 @@ public class Coordinator : MonoBehaviour
 
 	void OnShuffleButtonClick()
 	{
+		// Shuffle the roles
+		Utility.Shuffle(m_sideToPlayer);
+
+		// Shuffle the cards
 		m_distributedCards = m_model.ReliablyDistributeCards();
 
-		m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[0]);
-		m_shuffleSection.transform.Find("HandsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[1]);
-		m_shuffleSection.transform.Find("EarsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[2]);
-		m_shuffleSection.transform.Find("MouthCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[3]);
+		// Update the UI
+		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
+		{
+			Model.Player player = (Model.Player) m_sideToPlayer[sideIndex];
+
+			GetShuffleSectionTitle((Side) sideIndex).text = Model.PlayerNames[(int) player];
+			GetShuffleSectionCards((Side) sideIndex).text = MakeListOfCardIds(m_distributedCards[(int) player]);
+		}
+		// m_shuffleSection.transform.Find("EyesCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[0]);
+		// m_shuffleSection.transform.Find("HandsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[1]);
+		// m_shuffleSection.transform.Find("EarsCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[2]);
+		// m_shuffleSection.transform.Find("MouthCards").GetComponent<Text>().text = MakeListOfCardIds(m_distributedCards[3]);
 
 		m_finalPieceCounts = m_model.CalculateFinalCounts(m_distributedCards);
 
@@ -265,6 +279,30 @@ public class Coordinator : MonoBehaviour
 
 		m_playTime = int.Parse(m_settingsSection.transform.Find("PlayTime").GetComponent<InputField>().text);
 		m_firingSessionCount = int.Parse(m_settingsSection.transform.Find("FiringSessionCount").GetComponent<InputField>().text);
+	}
+
+	Text GetShuffleSectionTitle(Side side)
+	{
+		switch(side)
+		{
+			case Side.L: return m_shuffleSection.transform.Find("LTitle").GetComponent<Text>(); 
+			case Side.B: return m_shuffleSection.transform.Find("BTitle").GetComponent<Text>(); 
+			case Side.R: return m_shuffleSection.transform.Find("RTitle").GetComponent<Text>(); 
+			case Side.T: return m_shuffleSection.transform.Find("TTitle").GetComponent<Text>(); 
+			default: throw new System.ArgumentException();
+		}
+	}
+
+	Text GetShuffleSectionCards(Side side)
+	{
+		switch(side)
+		{
+			case Side.L: return m_shuffleSection.transform.Find("LCards").GetComponent<Text>(); 
+			case Side.B: return m_shuffleSection.transform.Find("BCards").GetComponent<Text>(); 
+			case Side.R: return m_shuffleSection.transform.Find("RCards").GetComponent<Text>(); 
+			case Side.T: return m_shuffleSection.transform.Find("TCards").GetComponent<Text>(); 
+			default: throw new System.ArgumentException();
+		}
 	}
 
 	static float[] CalculateFiringSessionTimes(float playTime, int firingSessionCount)

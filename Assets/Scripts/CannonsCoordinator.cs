@@ -11,6 +11,7 @@ public class CannonsCoordinator : MonoBehaviour
 	public GameObject m_boatPrefab; 
 	public GameObject m_successText;
 	public GameObject m_failureText;
+	public GameObject m_transitionInText;
 	public Color m_buttonDefaultColor = Color.white;
 	public Color m_buttonToPressColor = Color.black;
 	public Color m_buttonGoodPressColor = Color.green;
@@ -18,6 +19,8 @@ public class CannonsCoordinator : MonoBehaviour
 
 	public float m_timePerRound = 3f;
 	public float m_timeBetweenRounds = 3f;
+	public float m_transitionInTime = 3f;
+	public float m_transitionInBlinkLength = 0.5f;
 
 	public delegate void OnRoundOver(bool succeeded, int successCount, int failureCount);
 	public event OnRoundOver m_onRoundOver;	
@@ -47,13 +50,14 @@ public class CannonsCoordinator : MonoBehaviour
 
 	enum State
 	{
+		TransitionIn,
 		BeforeRound,
 		InRound
 	}
 
 	bool[] m_fireButtonsWereHit = new bool[4];
 	GameObject m_boat;
-	State m_state = State.BeforeRound;
+	State m_state = State.TransitionIn;
 	float m_startedStateTime;
 	SpotIndex m_spotIndex;
 	int m_successCount = 0;
@@ -69,6 +73,20 @@ public class CannonsCoordinator : MonoBehaviour
 	{
 		switch(m_state)
 		{
+			case State.TransitionIn:
+				if(Time.time >= m_startedStateTime + m_transitionInTime)
+				{
+					m_transitionInText.SetActive(false);
+
+					m_state = State.BeforeRound;
+					m_startedStateTime = Time.time;
+				}
+				else
+				{
+					UpdateTransitionIn();
+				}
+				break;
+
 			case State.BeforeRound:
 				if(Time.time >= m_startedStateTime + m_timeBetweenRounds)
 				{
@@ -104,8 +122,10 @@ public class CannonsCoordinator : MonoBehaviour
 		// Clear the buttons list
 		for(var i = 0; i < 4; i++) m_fireButtonsWereHit[i] = false;
 
-		// Pick a spot
-		m_spotIndex = PickSpotIndex();
+		// Pick a spot (not the same)
+		SpotIndex lastSpotIndex = m_spotIndex;
+		while(lastSpotIndex == m_spotIndex) m_spotIndex = PickSpotIndex();
+
 		Transform spot = m_spots[(int) m_spotIndex];
 
 		// Move boat there
@@ -167,6 +187,13 @@ public class CannonsCoordinator : MonoBehaviour
 			if(buttonsToPress[i] != m_fireButtonsWereHit[i]) return false;
 		} 
 		return true;
+	}
+
+	void UpdateTransitionIn()
+	{
+		// Blink
+		bool blinkOn = Mathf.Repeat(Time.time, m_transitionInBlinkLength) > (0.5f * m_transitionInBlinkLength);
+		m_transitionInText.SetActive(blinkOn); 
 	}
 
 	static int CountPointsForSpot(SpotIndex spotIndex)

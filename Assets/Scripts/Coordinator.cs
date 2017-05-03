@@ -73,6 +73,7 @@ public class Coordinator : MonoBehaviour
 		m_settingsSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnSettingsButtonClick);		
 		m_shuffleSection.transform.Find("ShuffleButton").GetComponent<Button>().onClick.AddListener(OnShuffleButtonClick);
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
+		m_playSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnPlayDoneButtonClick);
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);
 		m_endSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnEndDoneButtonClick);
 
@@ -260,6 +261,13 @@ public class Coordinator : MonoBehaviour
 			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You lose";
 			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = string.Concat(difference, " pieces are wrong");
 		}
+	}
+
+	void OnPlayDoneButtonClick()
+	{
+		m_state = State.Count;
+		m_playSection.SetActive(false);
+		m_countSection.SetActive(true);
 	}
 
 	void OnEndDoneButtonClick()

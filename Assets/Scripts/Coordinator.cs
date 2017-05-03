@@ -11,6 +11,8 @@ public class Coordinator : MonoBehaviour
 
 	public Model m_model;
 	public AudioSource m_musicSource;
+	public AudioClip m_introMusic;
+	public AudioClip m_playMusic;
 
 	public GameObject m_shuffleSection;
 	public GameObject m_playSection;
@@ -73,6 +75,9 @@ public class Coordinator : MonoBehaviour
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);
 		m_endSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnEndDoneButtonClick);
+
+		m_musicSource.clip = m_introMusic;
+		m_musicSource.Play();
 	}
 
 	void Update()
@@ -185,6 +190,8 @@ public class Coordinator : MonoBehaviour
 	{
 		UpdateSettings();
 
+		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
+
 		m_settingsSection.SetActive(false);
 		m_shuffleSection.SetActive(true);
 	}
@@ -215,6 +222,9 @@ public class Coordinator : MonoBehaviour
 	{
 		m_shuffleSection.SetActive(false);
 		m_playSection.SetActive(true);
+
+		m_musicSource.clip = m_playMusic;
+		m_musicSource.Play();
 
 		m_firingSessionStartTimes = CalculateFiringSessionTimes(m_playTime, m_firingSessionCount);
 		m_firingSessionsComplete = 0;
@@ -255,7 +265,7 @@ public class Coordinator : MonoBehaviour
 	void OnEndDoneButtonClick()
 	{
 		m_endSection.SetActive(false);
-		m_shuffleSection.SetActive(true);
+		m_settingsSection.SetActive(true);
 
 		// Clear the UI
 		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
@@ -264,9 +274,10 @@ public class Coordinator : MonoBehaviour
 			GetShuffleSectionCards((Side) sideIndex).text = ""; 
 		}
 
-		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
-
-		m_state = State.Shuffle;
+		m_musicSource.clip = m_introMusic;
+		m_musicSource.Play();
+		
+		m_state = State.Settings;
 	}
 
 	void UpdateSettings()

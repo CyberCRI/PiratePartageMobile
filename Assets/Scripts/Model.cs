@@ -139,7 +139,7 @@ public class Model : MonoBehaviour
 	public int m_cardsForSelf = 8;
 	public int m_cardsForOthers = 4;
 
-	public static string[] PlayerNames = new string[4]{ "Captain Skulleyes", "Captain Lockjaw", "Captain Bonedust", "Captain Tins" };
+	public static string[] PlayerNames = new string[4]{ "Captain Skulleyes", "Captain Bonedust", "Captain Tins", "Captain Lockjaw" };
 
 	public List<Card>[] DistributeCards()
 	{

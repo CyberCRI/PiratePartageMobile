@@ -77,7 +77,6 @@ public class Coordinator : MonoBehaviour
 		m_menuSection.transform.Find("Level2Button").GetComponent<Button>().onClick.AddListener(OnLevel2ButtonClick);
 		m_menuSection.transform.Find("Level3Button").GetComponent<Button>().onClick.AddListener(OnLevel3ButtonClick);
 
-		//m_settingsSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnSettingsButtonClick);		
 		m_shuffleSection.transform.Find("ShuffleButton").GetComponent<Button>().onClick.AddListener(OnShuffleButtonClick);
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
 		m_playSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnPlayDoneButtonClick);

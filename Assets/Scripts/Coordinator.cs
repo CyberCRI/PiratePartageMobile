@@ -24,7 +24,8 @@ public class Coordinator : MonoBehaviour
 	public int m_firingFailureLimit = 3;
 	public int m_firingSessionCount = 1;
 
-	public GameObject m_settingsSection;
+	//public GameObject m_settingsSection;
+	public GameObject m_menuSection;
 
 	State m_state = State.Settings;
 	List<Model.Card>[] m_distributedCards;
@@ -70,14 +71,19 @@ public class Coordinator : MonoBehaviour
 	{
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
-		m_settingsSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnSettingsButtonClick);		
+		m_menuSection.transform.Find("Tutorial1Button").GetComponent<Button>().onClick.AddListener(OnTutorial1ButtonClick);
+		m_menuSection.transform.Find("Tutorial2Button").GetComponent<Button>().onClick.AddListener(OnTutorial2ButtonClick);
+		m_menuSection.transform.Find("Level1Button").GetComponent<Button>().onClick.AddListener(OnLevel1ButtonClick);
+		m_menuSection.transform.Find("Level2Button").GetComponent<Button>().onClick.AddListener(OnLevel2ButtonClick);
+		m_menuSection.transform.Find("Level3Button").GetComponent<Button>().onClick.AddListener(OnLevel3ButtonClick);
+
+		//m_settingsSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnSettingsButtonClick);		
 		m_shuffleSection.transform.Find("ShuffleButton").GetComponent<Button>().onClick.AddListener(OnShuffleButtonClick);
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().onClick.AddListener(OnStartButtonClick);
 		m_playSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnPlayDoneButtonClick);
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);
 		m_endSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnEndDoneButtonClick);
-
-		m_musicSource.clip = m_introMusic;
+		
 		m_musicSource.Play();
 	}
 
@@ -187,13 +193,73 @@ public class Coordinator : MonoBehaviour
 		m_playSection.transform.Find("Timer").GetComponent<Text>().text = string.Concat(minutes, ":", seconds < 10 ? "0" : "", seconds);
 	}
 
-	void OnSettingsButtonClick()
+	/*void OnSettingsButtonClick()
 	{
 		UpdateSettings();
 
 		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
 
 		m_settingsSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}*/
+
+	void OnTutorial1ButtonClick()
+	{
+		m_model.m_cardsForSelf = 1;
+		m_model.m_cardsForOthers = 0;
+		m_model.m_starting_item_count = 8;
+		m_playTime = 600;
+		m_firingSessionCount = 0;
+
+		m_menuSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}
+
+	void OnTutorial2ButtonClick()
+	{
+		m_model.m_cardsForSelf = 0;
+		m_model.m_cardsForOthers = 0;
+		m_model.m_starting_item_count = 8;
+		m_playTime = 1;
+		m_firingSessionCount = 1;
+
+		m_menuSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}
+
+	void OnLevel1ButtonClick()
+	{
+		m_model.m_cardsForSelf = 3;
+		m_model.m_cardsForOthers = 0;
+		m_model.m_starting_item_count = 8;
+		m_playTime = 600;
+		m_firingSessionCount = 0;
+
+		m_menuSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}
+
+	void OnLevel2ButtonClick()
+	{
+		m_model.m_cardsForSelf = 2;
+		m_model.m_cardsForOthers = 1;
+		m_model.m_starting_item_count = 8;
+		m_playTime = 600;
+		m_firingSessionCount = 2;
+
+		m_menuSection.SetActive(false);
+		m_shuffleSection.SetActive(true);
+	}
+
+	void OnLevel3ButtonClick()
+	{
+		m_model.m_cardsForSelf = 2;
+		m_model.m_cardsForOthers = 2;
+		m_model.m_starting_item_count = 8;
+		m_playTime = 600;
+		m_firingSessionCount = 3;
+
+		m_menuSection.SetActive(false);
 		m_shuffleSection.SetActive(true);
 	}
 
@@ -273,7 +339,7 @@ public class Coordinator : MonoBehaviour
 	void OnEndDoneButtonClick()
 	{
 		m_endSection.SetActive(false);
-		m_settingsSection.SetActive(true);
+		m_menuSection.SetActive(true);
 
 		// Clear the UI
 		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
@@ -288,7 +354,7 @@ public class Coordinator : MonoBehaviour
 		m_state = State.Settings;
 	}
 
-	void UpdateSettings()
+	/*void UpdateSettings()
 	{
 		m_model.m_cardsForSelf = int.Parse(m_settingsSection.transform.Find("CardsForSelf").GetComponent<InputField>().text);
 		m_model.m_cardsForOthers = int.Parse(m_settingsSection.transform.Find("CardsForOthers").GetComponent<InputField>().text);
@@ -296,7 +362,7 @@ public class Coordinator : MonoBehaviour
 
 		m_playTime = int.Parse(m_settingsSection.transform.Find("PlayTime").GetComponent<InputField>().text);
 		m_firingSessionCount = int.Parse(m_settingsSection.transform.Find("FiringSessionCount").GetComponent<InputField>().text);
-	}
+	}*/
 
 	Text GetShuffleSectionTitle(Side side)
 	{

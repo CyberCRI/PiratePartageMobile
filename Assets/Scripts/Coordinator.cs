@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Coordinator : MonoBehaviour
 {
-	enum State { Settings, Shuffle, Play, Firing, Count, End };
+	enum State { Menu, FiringTutorial, Shuffle, Play, Firing, Count, End };
 	enum Side { L = 0, B, R, T }; // Left, bottom, right, top
 
 	public Model m_model;
@@ -27,7 +27,7 @@ public class Coordinator : MonoBehaviour
 	//public GameObject m_settingsSection;
 	public GameObject m_menuSection;
 
-	State m_state = State.Settings;
+	State m_state = State.Menu;
 	List<Model.Card>[] m_distributedCards;
 	Model.PieceCount[] m_finalPieceCounts;
 	float m_elapsedPlayTime;
@@ -122,6 +122,17 @@ public class Coordinator : MonoBehaviour
 					}					
 				}
 				break;
+			
+			case State.FiringTutorial:
+				if(m_sceneChangeAsyncOp != null)
+				{
+					if(m_sceneChangeAsyncOp.isDone)
+					{
+						m_sceneChangeAsyncOp = null;
+						StartFiringSession(OnFiringTutorialRoundOver);
+					}
+				}
+				break;
 
 			case State.Firing:
 				if(m_sceneChangeAsyncOp != null)
@@ -129,7 +140,7 @@ public class Coordinator : MonoBehaviour
 					if(m_sceneChangeAsyncOp.isDone)
 					{
 						m_sceneChangeAsyncOp = null;
-						StartFiringSession();
+						StartFiringSession(OnFiringRoundOver);
 					}
 				}
 				break;
@@ -157,7 +168,19 @@ public class Coordinator : MonoBehaviour
 		}
 	}
 
-	void StartFiringSession()
+	void OnFiringTutorialRoundOver(bool succeeded, int successCount, int failureCount)
+	{
+		if(successCount >= m_firingSuccessGoal)
+		{
+			Debug.Log("Won firing session");
+			EndFiringSession();
+
+			m_state = State.Menu;
+			m_menuSection.SetActive(true);
+		}
+	}
+
+	void StartFiringSession(CannonsCoordinator.OnRoundOver onRoundOver)
 	{
 		// Hide timer
 		m_playSection.SetActive(false);
@@ -167,7 +190,7 @@ public class Coordinator : MonoBehaviour
 
 		// Attach to event handler
 		m_cannonsCoordinator = GameObject.Find("CannonsCoordinator").GetComponent<CannonsCoordinator>();
-		m_cannonsCoordinator.m_onRoundOver += OnFiringRoundOver;
+		m_cannonsCoordinator.m_onRoundOver += onRoundOver; 
 
 		// Stop audio listener in cannons scene
 		GameObject.Find("Cannons Main Camera").GetComponent<AudioListener>().enabled = false;
@@ -193,16 +216,6 @@ public class Coordinator : MonoBehaviour
 		m_playSection.transform.Find("Timer").GetComponent<Text>().text = string.Concat(minutes, ":", seconds < 10 ? "0" : "", seconds);
 	}
 
-	/*void OnSettingsButtonClick()
-	{
-		UpdateSettings();
-
-		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
-
-		m_settingsSection.SetActive(false);
-		m_shuffleSection.SetActive(true);
-	}*/
-
 	void OnTutorial1ButtonClick()
 	{
 		m_model.m_cardsForSelf = 1;
@@ -217,19 +230,15 @@ public class Coordinator : MonoBehaviour
 
 	void OnTutorial2ButtonClick()
 	{
-		m_model.m_cardsForSelf = 0;
-		m_model.m_cardsForOthers = 0;
-		m_model.m_starting_item_count = 8;
-		m_playTime = 1;
-		m_firingSessionCount = 1;
+		m_state = State.FiringTutorial;
+		m_sceneChangeAsyncOp = SceneManager.LoadSceneAsync("Cannons", LoadSceneMode.Additive);
 
 		m_menuSection.SetActive(false);
-		m_shuffleSection.SetActive(true);
 	}
 
 	void OnLevel1ButtonClick()
 	{
-		m_model.m_cardsForSelf = 3;
+		m_model.m_cardsForSelf = 2;
 		m_model.m_cardsForOthers = 0;
 		m_model.m_starting_item_count = 8;
 		m_playTime = 600;
@@ -351,18 +360,8 @@ public class Coordinator : MonoBehaviour
 		m_musicSource.clip = m_introMusic;
 		m_musicSource.Play();
 		
-		m_state = State.Settings;
+		m_state = State.Menu;
 	}
-
-	/*void UpdateSettings()
-	{
-		m_model.m_cardsForSelf = int.Parse(m_settingsSection.transform.Find("CardsForSelf").GetComponent<InputField>().text);
-		m_model.m_cardsForOthers = int.Parse(m_settingsSection.transform.Find("CardsForOthers").GetComponent<InputField>().text);
-		m_model.m_starting_item_count = int.Parse(m_settingsSection.transform.Find("StartingPieceCount").GetComponent<InputField>().text);
-
-		m_playTime = int.Parse(m_settingsSection.transform.Find("PlayTime").GetComponent<InputField>().text);
-		m_firingSessionCount = int.Parse(m_settingsSection.transform.Find("FiringSessionCount").GetComponent<InputField>().text);
-	}*/
 
 	Text GetShuffleSectionTitle(Side side)
 	{

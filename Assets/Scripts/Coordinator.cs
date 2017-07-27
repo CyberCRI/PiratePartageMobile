@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Coordinator : MonoBehaviour
 {
-	enum State { Menu, FiringTutorial, Shuffle, Play, Firing, Count, End };
+	enum State { Intro, Menu, FiringTutorial, Shuffle, Play, Firing, Count, End };
 	enum Side { L = 0, B, R, T }; // Left, bottom, right, top
 
 	public Model m_model;
@@ -14,11 +14,13 @@ public class Coordinator : MonoBehaviour
 	public AudioClip m_introMusic;
 	public AudioClip m_playMusic;
 
+	public GameObject m_introSection;
 	public GameObject m_shuffleSection;
 	public GameObject m_playSection;
 	public GameObject m_countSection;
 	public GameObject m_endSection;
 
+	public float m_introTime = 5f;
 	public float m_playTime = 4 * 60f;
 	public int m_firingSuccessGoal = 3;
 	public int m_firingFailureLimit = 3;
@@ -27,7 +29,7 @@ public class Coordinator : MonoBehaviour
 	//public GameObject m_settingsSection;
 	public GameObject m_menuSection;
 
-	State m_state = State.Menu;
+	State m_state = State.Intro;
 	List<Model.Card>[] m_distributedCards;
 	Model.PieceCount[] m_finalPieceCounts;
 	float m_elapsedPlayTime;
@@ -90,6 +92,15 @@ public class Coordinator : MonoBehaviour
 	{
 		switch(m_state)
 		{
+			case State.Intro:
+				if(Time.realtimeSinceStartup >= m_introTime)
+				{
+					m_state = State.Menu;
+					m_introSection.SetActive(false);
+					m_menuSection.SetActive(true);
+				}
+				break;
+
 			case State.Play:
 				if(m_sceneChangeAsyncOp != null)
 				{

@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: b3111142de8fa4915a7c2196398945eb
+timeCreated: 1501168379
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Sneakerhead BTN
+  fontNames:
+  - Sneakerhead BTN
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

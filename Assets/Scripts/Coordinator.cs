@@ -7,7 +7,6 @@ using UnityEngine.SceneManagement;
 public class Coordinator : MonoBehaviour
 {
 	enum State { Intro, Menu, FiringTutorial, Shuffle, Play, Firing, Count, End };
-	enum Side { L = 0, B, R, T }; // Left, bottom, right, top
 
 	public Model m_model;
 	public AudioSource m_musicSource;
@@ -37,18 +36,7 @@ public class Coordinator : MonoBehaviour
 	int m_firingSessionsComplete;
 	AsyncOperation m_sceneChangeAsyncOp;
 	CannonsCoordinator m_cannonsCoordinator;
-	List<Model.Player> m_sideToPlayer = new List<Model.Player>{ Model.Player.Eyes, Model.Player.Hands, Model.Player.Ears, Model.Player.Mouth };
 
-
-	static string MakeListOfCardIds(List<Model.Card> cards)
-	{
-		StringBuilder builder = new StringBuilder();
-		foreach(var card in cards)
-		{
-			builder.Append(card.m_id).Append("\n");
-		}
-		return builder.ToString();
-	}
 
 	static string MakeListOfCounts(Model.PieceCount pieceCount)
 	{
@@ -85,6 +73,9 @@ public class Coordinator : MonoBehaviour
 		m_countSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnCountDoneButtonClick);
 		m_endSection.transform.Find("DoneButton").GetComponent<Button>().onClick.AddListener(OnEndDoneButtonClick);
 		
+		PrepareShuffleSection();
+
+		m_musicSource.clip = m_introMusic;
 		m_musicSource.Play();
 	}
 
@@ -284,19 +275,18 @@ public class Coordinator : MonoBehaviour
 
 	void OnShuffleButtonClick()
 	{
-		// Shuffle the roles
-		Utility.Shuffle(m_sideToPlayer);
-
 		// Shuffle the cards
 		m_distributedCards = m_model.ReliablyDistributeCards();
 
 		// Update the UI
-		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
+		ClearShuffleSectionText();
+		for(int playerIndex = 0; playerIndex < 4; playerIndex++)
 		{
-			Model.Player player = (Model.Player) m_sideToPlayer[sideIndex];
-
-			GetShuffleSectionTitle((Side) sideIndex).text = Model.PlayerNames[(int) player];
-			GetShuffleSectionCards((Side) sideIndex).text = MakeListOfCardIds(m_distributedCards[(int) player]);
+			GameObject cardBlock = GetCardBlock((Model.Player) playerIndex);
+			for(int cardIndex = 0; cardIndex < m_distributedCards[playerIndex].Count; cardIndex++)
+			{
+				cardBlock.transform.GetChild(cardIndex).GetComponent<Text>().text = m_distributedCards[playerIndex][cardIndex].m_id;
+			}
 		}
 
 		m_finalPieceCounts = m_model.CalculateFinalCounts(m_distributedCards);
@@ -360,12 +350,7 @@ public class Coordinator : MonoBehaviour
 		m_endSection.SetActive(false);
 		m_menuSection.SetActive(true);
 
-		// Clear the UI
-		for(int sideIndex = 0; sideIndex < 4; sideIndex++)
-		{
-			GetShuffleSectionTitle((Side) sideIndex).text = "";
-			GetShuffleSectionCards((Side) sideIndex).text = ""; 
-		}
+		PrepareShuffleSection();
 
 		m_musicSource.clip = m_introMusic;
 		m_musicSource.Play();
@@ -373,26 +358,32 @@ public class Coordinator : MonoBehaviour
 		m_state = State.Menu;
 	}
 
-	Text GetShuffleSectionTitle(Side side)
+	void PrepareShuffleSection()
 	{
-		switch(side)
+		m_shuffleSection.transform.Find("StartButton").GetComponent<Button>().interactable = false;
+		ClearShuffleSectionText();
+	}
+
+	void ClearShuffleSectionText()
+	{
+		for(int playerIndex = 0; playerIndex < 4; playerIndex++)
 		{
-			case Side.L: return m_shuffleSection.transform.Find("LTitle").GetComponent<Text>(); 
-			case Side.B: return m_shuffleSection.transform.Find("BTitle").GetComponent<Text>(); 
-			case Side.R: return m_shuffleSection.transform.Find("RTitle").GetComponent<Text>(); 
-			case Side.T: return m_shuffleSection.transform.Find("TTitle").GetComponent<Text>(); 
-			default: throw new System.ArgumentException();
+			GameObject cardBlock = GetCardBlock((Model.Player) playerIndex);
+			for(int cardIndex = 0; cardIndex < 4; cardIndex++)
+			{
+				cardBlock.transform.GetChild(cardIndex).GetComponent<Text>().text = "";
+			}
 		}
 	}
 
-	Text GetShuffleSectionCards(Side side)
+	GameObject GetCardBlock(Model.Player player)
 	{
-		switch(side)
+		switch(player)
 		{
-			case Side.L: return m_shuffleSection.transform.Find("LCards").GetComponent<Text>(); 
-			case Side.B: return m_shuffleSection.transform.Find("BCards").GetComponent<Text>(); 
-			case Side.R: return m_shuffleSection.transform.Find("RCards").GetComponent<Text>(); 
-			case Side.T: return m_shuffleSection.transform.Find("TCards").GetComponent<Text>(); 
+			case Model.Player.Eyes: return m_shuffleSection.transform.Find("EyesCardBlock").gameObject; 
+			case Model.Player.Hands: return m_shuffleSection.transform.Find("HandsCardBlock").gameObject; 
+			case Model.Player.Ears: return m_shuffleSection.transform.Find("EarsCardBlock").gameObject; 
+			case Model.Player.Mouth: return m_shuffleSection.transform.Find("MouthCardBlock").gameObject; 
 			default: throw new System.ArgumentException();
 		}
 	}

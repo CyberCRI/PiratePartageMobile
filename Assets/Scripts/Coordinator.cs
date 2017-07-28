@@ -334,13 +334,33 @@ public class Coordinator : MonoBehaviour
 		int difference = Model.DifferencePieceCounts(m_finalPieceCounts, actualPieceCounts);
 		if(difference == 0)
 		{
-			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You won";
-			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "";
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "You were perfect!";
 		}
 		else
 		{
-			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You lose";
-			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = string.Concat(difference, " pieces are wrong");
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = string.Concat(difference, " pieces were wrong");
+		}
+
+		// Update star count
+		var starContainer = m_endSection.transform.Find("Stars");
+		foreach(Transform child in starContainer)
+		{
+			child.gameObject.SetActive(false);
+		}
+		if(difference == 0) starContainer.GetChild(2).gameObject.SetActive(true); // 3 stars
+		else if(difference < 5) starContainer.GetChild(1).gameObject.SetActive(true); // 2 stars
+		else if (difference < 15) starContainer.GetChild(0).gameObject.SetActive(true); // 1 stars
+
+		// Report errors
+		for(int playerIndex = 0; playerIndex < 4; playerIndex++)
+		{
+			GameObject errorBoxes = GetErrorBoxes((Model.Player) playerIndex);
+			var pieceCountDifference = Model.SubtractPieceCounts(m_finalPieceCounts[playerIndex], actualPieceCounts[playerIndex]);
+
+			UpdateErrorBox(errorBoxes, "CannonballBox", pieceCountDifference.m_cannonballCount);
+			UpdateErrorBox(errorBoxes, "ParchmentBox", pieceCountDifference.m_parchmentCount);
+			UpdateErrorBox(errorBoxes, "JewelBox", pieceCountDifference.m_jewelCount);
+			UpdateErrorBox(errorBoxes, "BottleBox", pieceCountDifference.m_bottleCount);
 		}
 	}
 
@@ -391,6 +411,32 @@ public class Coordinator : MonoBehaviour
 			case Model.Player.Ears: return m_shuffleSection.transform.Find("EarsCardBlock").gameObject; 
 			case Model.Player.Mouth: return m_shuffleSection.transform.Find("MouthCardBlock").gameObject; 
 			default: throw new System.ArgumentException();
+		}
+	}
+
+	GameObject GetErrorBoxes(Model.Player player)
+	{
+		switch(player)
+		{
+			case Model.Player.Eyes: return m_endSection.transform.Find("EyesErrorBoxes").gameObject; 
+			case Model.Player.Hands: return m_endSection.transform.Find("HandsErrorBoxes").gameObject; 
+			case Model.Player.Ears: return m_endSection.transform.Find("EarsErrorBoxes").gameObject; 
+			case Model.Player.Mouth: return m_endSection.transform.Find("MouthErrorBoxes").gameObject; 
+			default: throw new System.ArgumentException();
+		}
+	}
+
+	void UpdateErrorBox(GameObject errorBoxes, string boxName, int difference)
+	{
+		var box = errorBoxes.transform.Find(boxName).gameObject;
+		if(difference == 0)
+		{
+			box.SetActive(false);
+		}
+		else
+		{
+			box.SetActive(true);
+			box.GetComponentInChildren<Text>().text = System.Math.Abs(difference).ToString();				
 		}
 	}
 

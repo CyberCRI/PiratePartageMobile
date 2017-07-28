@@ -19,6 +19,8 @@ public class Coordinator : MonoBehaviour
 	public GameObject m_countSection;
 	public GameObject m_endSection;
 
+	public Sprite[] m_hourglassImages;
+
 	public float m_introTime = 5f;
 	public float m_playTime = 4 * 60f;
 	public int m_firingSuccessGoal = 3;
@@ -215,6 +217,10 @@ public class Coordinator : MonoBehaviour
 		int minutes = ((int) timeLeft) / 60;
 		int seconds = ((int) timeLeft) % 60;
 		m_playSection.transform.Find("Timer").GetComponent<Text>().text = string.Concat(minutes, ":", seconds < 10 ? "0" : "", seconds);
+
+		// Update hourglass
+		int imageIndex = System.Math.Min(m_hourglassImages.Length - 1, (int) (m_elapsedPlayTime / (m_playTime / m_hourglassImages.Length))); 
+		m_playSection.transform.Find("Hourglass").GetComponent<Image>().sprite = m_hourglassImages[imageIndex];
 	}
 
 	void OnTutorial1ButtonClick()

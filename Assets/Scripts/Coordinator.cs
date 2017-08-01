@@ -132,7 +132,7 @@ public class Coordinator : MonoBehaviour
 					if(m_sceneChangeAsyncOp.isDone)
 					{
 						m_sceneChangeAsyncOp = null;
-						StartFiringSession(OnFiringTutorialRoundOver);
+						StartFiringSession(OnFiringTutorialSessionOver);
 					}
 				}
 				break;
@@ -143,23 +143,23 @@ public class Coordinator : MonoBehaviour
 					if(m_sceneChangeAsyncOp.isDone)
 					{
 						m_sceneChangeAsyncOp = null;
-						StartFiringSession(OnFiringRoundOver);
+						StartFiringSession(OnFiringSessionOver);
 					}
 				}
 				break;
 		}
 	}
 
-	void OnFiringRoundOver(bool succeeded, int successCount, int failureCount)
+	void OnFiringSessionOver(bool succeeded, int successCount, int failureCount)
 	{
-		if(successCount >= m_firingSuccessGoal)
+		if(succeeded)
 		{
 			Debug.Log("Won firing session");
 			EndFiringSession();
 
 			m_state = State.Play;
 		}
-		else if(failureCount >= m_firingFailureLimit)
+		else
 		{
 			Debug.Log("Lost firing session");
 			EndFiringSession();
@@ -171,9 +171,9 @@ public class Coordinator : MonoBehaviour
 		}
 	}
 
-	void OnFiringTutorialRoundOver(bool succeeded, int successCount, int failureCount)
+	void OnFiringTutorialSessionOver(bool succeeded, int successCount, int failureCount)
 	{
-		if(successCount >= m_firingSuccessGoal)
+		if(succeeded)
 		{
 			Debug.Log("Won firing session");
 			EndFiringSession();
@@ -183,7 +183,7 @@ public class Coordinator : MonoBehaviour
 		}
 	}
 
-	void StartFiringSession(CannonsCoordinator.OnRoundOver onRoundOver)
+	void StartFiringSession(CannonsCoordinator.OnSessionOver onSessionOver)
 	{
 		// Hide timer
 		m_playSection.SetActive(false);
@@ -193,7 +193,9 @@ public class Coordinator : MonoBehaviour
 
 		// Attach to event handler
 		m_cannonsCoordinator = GameObject.Find("CannonsCoordinator").GetComponent<CannonsCoordinator>();
-		m_cannonsCoordinator.m_onRoundOver += onRoundOver; 
+		m_cannonsCoordinator.m_onSessionOver += onSessionOver; 
+		m_cannonsCoordinator.m_successGoal = m_firingSuccessGoal; 
+		m_cannonsCoordinator.m_failureLimit = m_firingFailureLimit; 
 
 		// Stop audio listener in cannons scene
 		GameObject.Find("Cannons Main Camera").GetComponent<AudioListener>().enabled = false;
@@ -201,7 +203,6 @@ public class Coordinator : MonoBehaviour
 
 	void EndFiringSession()
 	{
-		m_cannonsCoordinator.m_onRoundOver -= OnFiringRoundOver;
 		m_sceneChangeAsyncOp = SceneManager.UnloadSceneAsync("Cannons");
 
 		// Start music again

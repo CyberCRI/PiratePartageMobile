@@ -4,26 +4,35 @@ using UnityEngine;
 
 public class CannonsCoordinator : MonoBehaviour 
 {
+	public int m_successGoal = 3;
+	public int m_failureLimit = 3;
+
 	// Must be declared in L B R T order
 	public GameObject[] m_fireButtons;
-	// Must be declared in same order as Spots enums
-	public Transform[] m_spots;
-	public GameObject m_boatPrefab; 
-	public GameObject m_successText;
-	public GameObject m_failureText;
-	public GameObject m_transitionInText;
-	public Color m_buttonDefaultColor = Color.white;
-	public Color m_buttonToPressColor = Color.black;
-	public Color m_buttonGoodPressColor = Color.green;
-	public Color m_buttonBadPressColor = Color.red;
+	public SpriteRenderer m_boat; 
+	public GameObject m_transitionInImage;
+	public ManualAnimator m_blastAnimation;
+	public GameObject m_hurtImage;
+	public UnityStandardAssets.ImageEffects.ScreenOverlay m_screenOverlay;
+
+	public Sprite m_buttonDefaultSprite;
+	public Sprite m_buttonToPressSprite;
+	public Sprite[] m_buttonBadPressedAnimation;
+
+	public Sprite m_cannonDefaultSprite;
+	public Sprite m_cannonGoodPressedSprite;
+	public Sprite m_cannonBadPressedSprite;
+
+	public Sprite m_boatDefaultSprite;
+	public Sprite m_boatBrokenSprite;
 
 	public float m_timePerRound = 3f;
 	public float m_timeBetweenRounds = 3f;
 	public float m_transitionInTime = 3f;
-	public float m_transitionInBlinkLength = 0.5f;
+	public float m_transitionOutTime = 3f;
 
-	public delegate void OnRoundOver(bool succeeded, int successCount, int failureCount);
-	public event OnRoundOver m_onRoundOver;	
+	public delegate void OnSessionOver(bool succeeded, int successCount, int failureCount);
+	public event OnSessionOver m_onSessionOver;	
 
 	// Declared in counter-clockwise order
 	enum SpotIndex 
@@ -52,21 +61,29 @@ public class CannonsCoordinator : MonoBehaviour
 	{
 		TransitionIn,
 		BeforeRound,
-		InRound
+		InRound,
+		TransitionOut,
+		Done
 	}
 
 	bool[] m_fireButtonsWereHit = new bool[4];
-	GameObject m_boat;
 	State m_state = State.TransitionIn;
 	float m_startedStateTime;
 	SpotIndex m_spotIndex;
 	int m_successCount = 0;
 	int m_failureCount = 0;
 
+	bool m_won;
+
 
 	void Start () 
 	{
 		m_startedStateTime = Time.time;
+
+		m_transitionInImage.SetActive(true);
+
+		m_boat.sprite = m_boatDefaultSprite;
+		m_screenOverlay.enabled = false;
 	}
 	
 	void Update () 
@@ -76,14 +93,10 @@ public class CannonsCoordinator : MonoBehaviour
 			case State.TransitionIn:
 				if(Time.time >= m_startedStateTime + m_transitionInTime)
 				{
-					m_transitionInText.SetActive(false);
+					m_transitionInImage.SetActive(false);
 
 					m_state = State.BeforeRound;
 					m_startedStateTime = Time.time;
-				}
-				else
-				{
-					UpdateTransitionIn();
 				}
 				break;
 
@@ -109,16 +122,22 @@ public class CannonsCoordinator : MonoBehaviour
 				{
 					UpdateInRound();
 				}
-				break;			
+				break;	
+
+			case State.TransitionOut:
+				if(Time.time >= m_startedStateTime + m_transitionOutTime)
+				{
+					m_state = State.Done;
+					m_startedStateTime = Time.time;
+
+					if(m_onSessionOver != null) m_onSessionOver(m_won, m_successCount, m_failureCount);
+				}
+				break;
 		}
 	}
 
 	void StartRound()
 	{
-		// Hide the texts
-		m_successText.SetActive(false);
-		m_failureText.SetActive(false);
-
 		// Clear the buttons list
 		for(var i = 0; i < 4; i++) m_fireButtonsWereHit[i] = false;
 
@@ -126,36 +145,54 @@ public class CannonsCoordinator : MonoBehaviour
 		SpotIndex lastSpotIndex = m_spotIndex;
 		while(lastSpotIndex == m_spotIndex) m_spotIndex = PickSpotIndex();
 
-		Transform spot = m_spots[(int) m_spotIndex];
-
-		// Move boat there
-		m_boat = Object.Instantiate(m_boatPrefab, spot.position, Quaternion.identity);
-
-		// Set the button color
+		// Update the look of buttons
+		ResetButtons();
 		bool[] buttonsToPress = GetButtonsToPress(m_spotIndex);
 		for(var i = 0; i < 4; i++)
 		{
-			m_fireButtons[i].GetComponent<SpriteRenderer>().color = (buttonsToPress[i] ? m_buttonToPressColor : m_buttonDefaultColor);
+			if(buttonsToPress[i])
+			{
+				m_fireButtons[i].GetComponent<SpriteRenderer>().sprite = m_buttonToPressSprite;
+			}
 		}
+
+		// Remove hurt animation if shown
+		m_hurtImage.SetActive(false);
 	}
 
 	void StopRound()
 	{
 		if(HitRightButtons())
 		{
-			m_successText.SetActive(true);
+			m_blastAnimation.gameObject.SetActive(true);
+			m_blastAnimation.m_frame = 0;
+			m_blastAnimation.m_playing = true;
+
 			m_successCount++;
-			if(m_onRoundOver != null) m_onRoundOver(true, m_successCount, m_failureCount);
+
+			if(m_successCount >= m_successGoal)
+			{
+				m_boat.sprite = m_boatBrokenSprite;
+				m_state = State.TransitionOut;
+
+				m_won = true;
+			}
 		}
 		else
 		{
-			m_failureText.SetActive(true);
-			m_failureCount++;
-			if(m_onRoundOver != null) m_onRoundOver(false, m_successCount, m_failureCount);
-		}
+			ShowBurstingBubbles();
+			m_hurtImage.SetActive(true);
 
-		Object.Destroy(m_boat);
-		m_boat = null;
+			m_failureCount++;
+
+			if(m_failureCount >= m_failureLimit)
+			{
+				m_screenOverlay.enabled = true;
+				m_state = State.TransitionOut;
+
+				m_won = false;				
+			}
+		}
 	}
 
 	void UpdateInRound()
@@ -169,11 +206,11 @@ public class CannonsCoordinator : MonoBehaviour
 				m_fireButtonsWereHit[i] = true;
 				if(buttonsToPress[i]) 
 				{
-					m_fireButtons[i].GetComponent<SpriteRenderer>().color = m_buttonGoodPressColor;
+					m_fireButtons[i].transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonGoodPressedSprite;
 				}
 				else
 				{
-					m_fireButtons[i].GetComponent<SpriteRenderer>().color = m_buttonBadPressColor;					
+					m_fireButtons[i].transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonBadPressedSprite;
 				}
 			}
 		} 
@@ -189,11 +226,43 @@ public class CannonsCoordinator : MonoBehaviour
 		return true;
 	}
 
-	void UpdateTransitionIn()
+	void ShowBurstingBubbles()
 	{
-		// Blink
-		bool blinkOn = Mathf.Repeat(Time.time, m_transitionInBlinkLength) > (0.5f * m_transitionInBlinkLength);
-		m_transitionInText.SetActive(blinkOn); 
+		bool[] buttonsToPress = GetButtonsToPress(m_spotIndex);
+		for(var i = 0; i < 4; i++) 
+		{
+			// If the button was not pressed correctly ... 
+			if(buttonsToPress[i] != m_fireButtonsWereHit[i]) 
+			{
+				// Hide the default "bubble" button
+				var fireButton = m_fireButtons[i];
+				fireButton.GetComponent<SpriteRenderer>().enabled = false;
+				
+				// Show the bubble bursting animation
+				var bubbleBurst = fireButton.transform.Find("BubbleBurst").gameObject;
+				bubbleBurst.SetActive(true);
+				var animator = bubbleBurst.GetComponent<ManualAnimator>();
+				animator.m_frame = 0;
+				animator.m_playing = true;
+			}
+		} 
+	}
+
+	void ResetButtons()
+	{
+		foreach(GameObject fireButton in m_fireButtons) 
+		{
+			// Show the default "bubble" button
+			fireButton.GetComponent<SpriteRenderer>().enabled = true;
+			fireButton.GetComponent<SpriteRenderer>().sprite = m_buttonDefaultSprite;
+			
+			// Hide the bubble bursting animation
+			var bubbleBurst = fireButton.transform.Find("BubbleBurst").gameObject;
+			bubbleBurst.SetActive(false);
+
+			// Show default cannon
+			fireButton.transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonDefaultSprite;
+		} 
 	}
 
 	static int CountPointsForSpot(SpotIndex spotIndex)

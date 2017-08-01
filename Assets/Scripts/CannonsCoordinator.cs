@@ -7,9 +7,11 @@ public class CannonsCoordinator : MonoBehaviour
 	public int m_successGoal = 3;
 	public int m_failureLimit = 3;
 
-	// Must be declared in L B R T order
 	public GameObject[] m_fireButtons;
+
 	public SpriteRenderer m_boat; 
+	public SpriteRenderer m_boatBroken;
+
 	public GameObject m_transitionInImage;
 	public ManualAnimator m_blastAnimation;
 	public GameObject m_hurtImage;
@@ -22,9 +24,6 @@ public class CannonsCoordinator : MonoBehaviour
 	public Sprite m_cannonDefaultSprite;
 	public Sprite m_cannonGoodPressedSprite;
 	public Sprite m_cannonBadPressedSprite;
-
-	public Sprite m_boatDefaultSprite;
-	public Sprite m_boatBrokenSprite;
 
 	public float m_timePerRound = 3f;
 	public float m_timeBetweenRounds = 3f;
@@ -82,7 +81,9 @@ public class CannonsCoordinator : MonoBehaviour
 
 		m_transitionInImage.SetActive(true);
 
-		m_boat.sprite = m_boatDefaultSprite;
+		m_boat.gameObject.SetActive(true);
+		m_boatBroken.gameObject.SetActive(false);
+		
 		m_screenOverlay.enabled = false;
 	}
 	
@@ -172,8 +173,11 @@ public class CannonsCoordinator : MonoBehaviour
 
 			if(m_successCount >= m_successGoal)
 			{
-				m_boat.sprite = m_boatBrokenSprite;
+				m_boat.gameObject.SetActive(false);
+				m_boatBroken.gameObject.SetActive(true);
+
 				m_state = State.TransitionOut;
+				m_startedStateTime = Time.time;
 
 				m_won = true;
 			}
@@ -188,7 +192,9 @@ public class CannonsCoordinator : MonoBehaviour
 			if(m_failureCount >= m_failureLimit)
 			{
 				m_screenOverlay.enabled = true;
+
 				m_state = State.TransitionOut;
+				m_startedStateTime = Time.time;
 
 				m_won = false;				
 			}

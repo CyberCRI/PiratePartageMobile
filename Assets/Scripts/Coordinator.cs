@@ -27,7 +27,6 @@ public class Coordinator : MonoBehaviour
 	public int m_firingFailureLimit = 3;
 	public int m_firingSessionCount = 1;
 
-	//public GameObject m_settingsSection;
 	public GameObject m_menuSection;
 
 	State m_state = State.Intro;
@@ -38,6 +37,7 @@ public class Coordinator : MonoBehaviour
 	int m_firingSessionsComplete;
 	AsyncOperation m_sceneChangeAsyncOp;
 	CannonsCoordinator m_cannonsCoordinator;
+	float m_gameStartTime;
 
 
 	static string MakeListOfCounts(Model.PieceCount pieceCount)
@@ -77,6 +77,8 @@ public class Coordinator : MonoBehaviour
 		
 		PrepareShuffleSection();
 
+		m_gameStartTime = Time.time;
+
 		m_musicSource.clip = m_introMusic;
 		m_musicSource.Play();
 	}
@@ -86,7 +88,7 @@ public class Coordinator : MonoBehaviour
 		switch(m_state)
 		{
 			case State.Intro:
-				if(Time.realtimeSinceStartup >= m_introTime)
+				if(Time.time >= m_gameStartTime + m_introTime)
 				{
 					m_state = State.Menu;
 					m_introSection.SetActive(false);
@@ -164,23 +166,41 @@ public class Coordinator : MonoBehaviour
 			Debug.Log("Lost firing session");
 			EndFiringSession();
 
-			m_endSection.transform.Find("Results").GetComponent<Text>().text = "You lose";
-			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "You were destroyed in battle";
 			m_endSection.SetActive(true);
+
+			m_endSection.transform.Find("Congratulations").gameObject.SetActive(false);
+			m_endSection.transform.Find("Try Again").gameObject.SetActive(true);
+
+			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "You were destroyed in battle";
+
+			// Update star count
+			var starContainer = m_endSection.transform.Find("Stars");
+			foreach(Transform child in starContainer)
+			{
+				child.gameObject.SetActive(false);
+			}
+
+			// Report no errors
+			for(int playerIndex = 0; playerIndex < 4; playerIndex++)
+			{
+				GameObject errorBoxes = GetErrorBoxes((Model.Player) playerIndex);
+
+				UpdateErrorBox(errorBoxes, "CannonballBox", 0);
+				UpdateErrorBox(errorBoxes, "ParchmentBox", 0);
+				UpdateErrorBox(errorBoxes, "JewelBox", 0);
+				UpdateErrorBox(errorBoxes, "BottleBox", 0);
+			}
+			
 			m_state = State.End;
 		}
 	}
 
 	void OnFiringTutorialSessionOver(bool succeeded, int successCount, int failureCount)
 	{
-		if(succeeded)
-		{
-			Debug.Log("Won firing session");
-			EndFiringSession();
+		EndFiringSession();
 
-			m_state = State.Menu;
-			m_menuSection.SetActive(true);
-		}
+		m_state = State.Menu;
+		m_menuSection.SetActive(true);
 	}
 
 	void StartFiringSession(CannonsCoordinator.OnSessionOver onSessionOver)
@@ -261,7 +281,7 @@ public class Coordinator : MonoBehaviour
 		m_model.m_cardsForSelf = 2;
 		m_model.m_cardsForOthers = 1;
 		m_model.m_starting_item_count = 8;
-		m_playTime = 600;
+		m_playTime = 600; 
 		m_firingSessionCount = 2;
 
 		m_menuSection.SetActive(false);
@@ -336,10 +356,16 @@ public class Coordinator : MonoBehaviour
 		if(difference == 0)
 		{
 			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = "You were perfect!";
+
+			m_endSection.transform.Find("Congratulations").gameObject.SetActive(true);
+			m_endSection.transform.Find("Try Again").gameObject.SetActive(false);
 		}
 		else
 		{
 			m_endSection.transform.Find("Explanation").GetComponent<Text>().text = string.Concat(difference, " pieces were wrong");
+
+			m_endSection.transform.Find("Congratulations").gameObject.SetActive(false);
+			m_endSection.transform.Find("Try Again").gameObject.SetActive(true);
 		}
 
 		// Update star count

@@ -22,10 +22,6 @@ public class CannonsCoordinator : MonoBehaviour
 	public Sprite m_buttonToPressSprite;
 	public Sprite[] m_buttonBadPressedAnimation;
 
-	public Sprite m_cannonDefaultSprite;
-	public Sprite m_cannonGoodPressedSprite;
-	public Sprite m_cannonBadPressedSprite;
-
 	public float m_timePerRound = 3f;
 	public float m_timeBetweenRounds = 3f;
 	public float m_transitionInTime = 3f;
@@ -222,13 +218,15 @@ public class CannonsCoordinator : MonoBehaviour
 			if(buttonsPressed[i]) 
 			{
 				m_fireButtonsWereHit[i] = true;
+
+				m_fireButtons[i].transform.Find("Cannon").gameObject.SetActive(false);
 				if(buttonsToPress[i]) 
 				{
-					m_fireButtons[i].transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonGoodPressedSprite;
+					m_fireButtons[i].transform.Find("CannonFull").gameObject.SetActive(true);
 				}
 				else
 				{
-					m_fireButtons[i].transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonBadPressedSprite;
+					m_fireButtons[i].transform.Find("CannonMisfire").gameObject.SetActive(true); 
 				}
 			}
 		} 
@@ -279,7 +277,9 @@ public class CannonsCoordinator : MonoBehaviour
 			bubbleBurst.SetActive(false);
 
 			// Show default cannon
-			fireButton.transform.Find("Cannon").gameObject.GetComponent<SpriteRenderer>().sprite = m_cannonDefaultSprite;
+			fireButton.transform.Find("Cannon").gameObject.SetActive(true);
+			fireButton.transform.Find("CannonFull").gameObject.SetActive(false);
+			fireButton.transform.Find("CannonMisfire").gameObject.SetActive(false);
 		} 
 	}
 

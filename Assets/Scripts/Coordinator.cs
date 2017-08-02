@@ -22,7 +22,7 @@ public class Coordinator : MonoBehaviour
 
 	public Sprite[] m_hourglassImages;
 	public ParticleSystem m_hourglassParticleSystem;
-	public GameObject m_hourglassCollisionPlanes;
+	public float[] m_hourglassLifetimes = new float[] { 0.4f, 0.4f, 0.38f, 0.35f, 0.33f, 0.33f, 0.27f, 0.23f, 0.11f };
 
 	public float m_introTime = 5f;
 	public float m_playSectionTime = 600f;
@@ -249,7 +249,8 @@ public class Coordinator : MonoBehaviour
 		// Update hourglass
 		int imageIndex = System.Math.Min(m_hourglassImages.Length - 1, (int) (m_elapsedPlayTime / (m_playTime / m_hourglassImages.Length))); 
 		m_playSection.transform.Find("Hourglass").GetComponent<Image>().sprite = m_hourglassImages[imageIndex];
-		m_hourglassParticleSystem.collision.SetPlane(0, m_hourglassCollisionPlanes.transform.GetChild(imageIndex));
+		var main = m_hourglassParticleSystem.main;
+		main.startLifetime = m_hourglassLifetimes[imageIndex];
 	}
 
 	void OnTutorial1ButtonClick()
@@ -335,7 +336,8 @@ public class Coordinator : MonoBehaviour
 
 		m_playSection.SetActive(true);
 		m_hourglassParticleSystem.gameObject.SetActive(true);
-		m_hourglassParticleSystem.collision.SetPlane(0, m_hourglassCollisionPlanes.transform.GetChild(0));
+		var main = m_hourglassParticleSystem.main;
+		main.startLifetime = m_hourglassLifetimes[0];
 
 		m_musicSource.clip = m_playMusic;
 		m_musicSource.Play();

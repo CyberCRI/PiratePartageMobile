@@ -13,8 +13,9 @@ public class CannonsCoordinator : MonoBehaviour
 	public SpriteRenderer m_boatBroken;
 
 	public GameObject m_transitionInImage;
-	public ManualAnimator m_blastAnimation;
+	public GameObject m_blastImage;
 	public GameObject m_hurtImage;
+	public ParticleSystem m_flamesParticleSystem;
 	public UnityStandardAssets.ImageEffects.ScreenOverlay m_screenOverlay;
 
 	public Sprite m_buttonDefaultSprite;
@@ -157,29 +158,40 @@ public class CannonsCoordinator : MonoBehaviour
 			}
 		}
 
-		// Remove hurt animation if shown
+		// Remove images if shown
 		m_hurtImage.SetActive(false);
+		m_blastImage.SetActive(false);
 	}
 
 	void StopRound()
 	{
 		if(HitRightButtons())
 		{
-			m_blastAnimation.gameObject.SetActive(true);
-			m_blastAnimation.m_frame = 0;
-			m_blastAnimation.m_playing = true;
+			m_blastImage.SetActive(true);
 
 			m_successCount++;
 
 			if(m_successCount >= m_successGoal)
 			{
 				m_boat.gameObject.SetActive(false);
+				m_blastImage.gameObject.SetActive(false);
 				m_boatBroken.gameObject.SetActive(true);
 
 				m_state = State.TransitionOut;
 				m_startedStateTime = Time.time;
 
 				m_won = true;
+			}
+			else if(m_successCount >= 2)
+			{
+				var emission = m_flamesParticleSystem.emission;
+				emission.rateOverTime = 5f;
+			}
+			else 
+			{
+				var emission = m_flamesParticleSystem.emission;
+				emission.rateOverTime = 2.5f;
+				m_flamesParticleSystem.Play();
 			}
 		}
 		else

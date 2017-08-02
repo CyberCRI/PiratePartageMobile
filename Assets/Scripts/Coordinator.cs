@@ -14,20 +14,22 @@ public class Coordinator : MonoBehaviour
 	public AudioClip m_playMusic;
 
 	public GameObject m_introSection;
+	public GameObject m_menuSection;
 	public GameObject m_shuffleSection;
 	public GameObject m_playSection;
 	public GameObject m_countSection;
 	public GameObject m_endSection;
 
 	public Sprite[] m_hourglassImages;
+	public ParticleSystem m_hourglassParticleSystem;
+	public GameObject m_hourglassCollisionPlanes;
 
 	public float m_introTime = 5f;
-	public float m_playTime = 4 * 60f;
+	public float m_playSectionTime = 600f;
+
 	public int m_firingSuccessGoal = 3;
 	public int m_firingFailureLimit = 3;
 	public int m_firingSessionCount = 1;
-
-	public GameObject m_menuSection;
 
 	State m_state = State.Intro;
 	List<Model.Card>[] m_distributedCards;
@@ -38,6 +40,7 @@ public class Coordinator : MonoBehaviour
 	AsyncOperation m_sceneChangeAsyncOp;
 	CannonsCoordinator m_cannonsCoordinator;
 	float m_gameStartTime;
+	float m_playTime;
 
 
 	static string MakeListOfCounts(Model.PieceCount pieceCount)
@@ -105,6 +108,7 @@ public class Coordinator : MonoBehaviour
 						
 						// Show timer
 						m_playSection.SetActive(true);
+						m_hourglassParticleSystem.gameObject.SetActive(true);
 					}
 				} 
 				else
@@ -114,6 +118,8 @@ public class Coordinator : MonoBehaviour
 					{
 						m_state = State.Count;
 						m_playSection.SetActive(false);
+						m_hourglassParticleSystem.gameObject.SetActive(false);
+
 						m_countSection.SetActive(true);
 					}
 					else if(m_firingSessionsComplete < m_firingSessionCount && m_elapsedPlayTime >= m_firingSessionStartTimes[m_firingSessionsComplete])
@@ -207,6 +213,7 @@ public class Coordinator : MonoBehaviour
 	{
 		// Hide timer
 		m_playSection.SetActive(false);
+		m_hourglassParticleSystem.gameObject.SetActive(false);
 
 		// Stop music
 		m_musicSource.Pause();
@@ -242,6 +249,7 @@ public class Coordinator : MonoBehaviour
 		// Update hourglass
 		int imageIndex = System.Math.Min(m_hourglassImages.Length - 1, (int) (m_elapsedPlayTime / (m_playTime / m_hourglassImages.Length))); 
 		m_playSection.transform.Find("Hourglass").GetComponent<Image>().sprite = m_hourglassImages[imageIndex];
+		m_hourglassParticleSystem.collision.SetPlane(0, m_hourglassCollisionPlanes.transform.GetChild(imageIndex));
 	}
 
 	void OnTutorial1ButtonClick()
@@ -249,7 +257,7 @@ public class Coordinator : MonoBehaviour
 		m_model.m_cardsForSelf = 1;
 		m_model.m_cardsForOthers = 0;
 		m_model.m_starting_item_count = 8;
-		m_playTime = 600;
+		m_playTime = m_playSectionTime;
 		m_firingSessionCount = 0;
 
 		m_menuSection.SetActive(false);
@@ -269,7 +277,7 @@ public class Coordinator : MonoBehaviour
 		m_model.m_cardsForSelf = 2;
 		m_model.m_cardsForOthers = 0;
 		m_model.m_starting_item_count = 8;
-		m_playTime = 600;
+		m_playTime = m_playSectionTime;
 		m_firingSessionCount = 0;
 
 		m_menuSection.SetActive(false);
@@ -281,7 +289,7 @@ public class Coordinator : MonoBehaviour
 		m_model.m_cardsForSelf = 2;
 		m_model.m_cardsForOthers = 1;
 		m_model.m_starting_item_count = 8;
-		m_playTime = 600; 
+		m_playTime = m_playSectionTime; 
 		m_firingSessionCount = 2;
 
 		m_menuSection.SetActive(false);
@@ -293,7 +301,7 @@ public class Coordinator : MonoBehaviour
 		m_model.m_cardsForSelf = 2;
 		m_model.m_cardsForOthers = 2;
 		m_model.m_starting_item_count = 8;
-		m_playTime = 600;
+		m_playTime = m_playSectionTime;
 		m_firingSessionCount = 3;
 
 		m_menuSection.SetActive(false);
@@ -324,13 +332,17 @@ public class Coordinator : MonoBehaviour
 	void OnStartButtonClick()
 	{
 		m_shuffleSection.SetActive(false);
+
 		m_playSection.SetActive(true);
+		m_hourglassParticleSystem.gameObject.SetActive(true);
+		m_hourglassParticleSystem.collision.SetPlane(0, m_hourglassCollisionPlanes.transform.GetChild(0));
 
 		m_musicSource.clip = m_playMusic;
 		m_musicSource.Play();
 
 		m_firingSessionStartTimes = CalculateFiringSessionTimes(m_playTime, m_firingSessionCount);
 		m_firingSessionsComplete = 0;
+
 
 		m_elapsedPlayTime = 0;
 		m_state = State.Play;
@@ -395,6 +407,8 @@ public class Coordinator : MonoBehaviour
 	{
 		m_state = State.Count;
 		m_playSection.SetActive(false);
+		m_hourglassParticleSystem.gameObject.SetActive(false);
+
 		m_countSection.SetActive(true);
 	}
 

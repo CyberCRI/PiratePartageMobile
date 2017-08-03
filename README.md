@@ -32,3 +32,9 @@ A bunch of stuff is needed:
 The app is developed in Unity 3D. You can use a free license to develop it.
 
 The card generation script is written in Python. The card designs are done in Adobe InDesign.
+
+## License
+
+The code is available under the MIT license.
+
+The smoke effects come from the [White Smoke Particle System asset by Xenosmash Games](https://www.assetstore.unity3d.com/en/#!/content/20404), who gave us permission to include it here.

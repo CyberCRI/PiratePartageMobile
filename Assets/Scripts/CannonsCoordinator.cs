@@ -15,7 +15,9 @@ public class CannonsCoordinator : MonoBehaviour
 	public GameObject m_transitionInImage;
 	public GameObject m_blastImage;
 	public GameObject m_hurtImage;
-	public ParticleSystem m_flamesParticleSystem;
+	public ParticleSystem m_explosionsParticleSystem;
+	public ParticleSystem m_fireParticleSystem;
+	public ParticleSystem m_smokeParticleSystem;
 	public UnityStandardAssets.ImageEffects.ScreenOverlay m_screenOverlay;
 
 	public Sprite m_buttonDefaultSprite;
@@ -164,13 +166,15 @@ public class CannonsCoordinator : MonoBehaviour
 		if(HitRightButtons())
 		{
 			m_blastImage.SetActive(true);
+			m_blastImage.GetComponent<Animator>().SetTrigger("play");
 
 			m_successCount++;
 
 			if(m_successCount >= m_successGoal)
 			{
+				m_explosionsParticleSystem.Play();
+
 				m_boat.gameObject.SetActive(false);
-				m_blastImage.gameObject.SetActive(false);
 				m_boatBroken.gameObject.SetActive(true);
 
 				m_state = State.TransitionOut;
@@ -180,20 +184,21 @@ public class CannonsCoordinator : MonoBehaviour
 			}
 			else if(m_successCount >= 2)
 			{
-				var emission = m_flamesParticleSystem.emission;
-				emission.rateOverTime = 5f;
+				m_explosionsParticleSystem.Play();
+				m_fireParticleSystem.Play();
+				m_smokeParticleSystem.Play();
 			}
 			else 
 			{
-				var emission = m_flamesParticleSystem.emission;
-				emission.rateOverTime = 2.5f;
-				m_flamesParticleSystem.Play();
+				m_explosionsParticleSystem.Play();
 			}
 		}
 		else
 		{
 			ShowBurstingBubbles();
 			m_hurtImage.SetActive(true);
+			m_hurtImage.GetComponent<Animator>().SetTrigger("play");
+
 
 			m_failureCount++;
 

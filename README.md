@@ -4,8 +4,6 @@ Pirate Partage is a silly cooperative physical game about what happens when peop
 
 Too complicate matters, each player has their own pirate handicap: Capitain Skulleyes can’t see, Captain Lockjaw can't speak, Captain Bonedust can't use their hands (though they are good with chopticks), and Captain Tins can't hear a thing. It’s up to the players to find a way to communicate nonetheless in the limited time before the navy arrives to take back their spoils.
 
-This version evolved from the coin-and-card game https://github.com/CyberCRI/PiratePartage created by By Garry Williams, Vincent Ducos and Jesse Himmelstein.
-
 The game puts the players in the tricky situation of having a real handicap, yet having to collaborate intensively. Along playing, players develop personal and collaborative strategies enlightening how, despite handicaps, people can be efficient and full scale social actors based on special efforts, awareness, social inclusion and collaboration.
 
 ## Set Up
@@ -32,6 +30,12 @@ A bunch of stuff is needed:
 The app is developed in Unity 3D. You can use a free license to develop it.
 
 The card generation script is written in Python. The card designs are done in Adobe InDesign.
+
+## Credits
+
+The original prototype was a coin-and-card game https://github.com/CyberCRI/PiratePartage created by By Garry Williams, Vincent Ducos and Jesse Himmelstein during the Diversity Game Jam at the Mozilla offices in Paris, with Gamelier and Jam Shaker.
+
+In the current version, Rahika Beaume did the graphic design for the mobile app as well as the cards and props. Liburn Jupolli made the music. Jesse Himmelstein did the programming and lead the game design.
 
 ## License
 

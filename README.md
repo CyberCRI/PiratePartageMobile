@@ -1,4 +1,4 @@
-# PiratePartage (mobile version)
+# Pirate Partage (hybrid digital/analog version)
 
 Pirate Partage is a silly cooperative physical game about what happens when people have to give up their primary means of communication. Four pirate captains have together acquired a large amount of loot, and made it back to their hidden lagoon. But the royal navy is hot on their tail, and will arrive any minute. The pirates have decided to split up into four separate boats, and each will go their separate way. But first they need to split up the loot in a very particular way, and fast! 
 
